@@ -9,7 +9,7 @@ from flask import Flask
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
-app = Flask("pybot-1023")
+app = Flask(__name__)
 
 
 @app.route('/')

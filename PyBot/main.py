@@ -2,7 +2,6 @@ import json
 import logging
 import urllib
 import urllib2
-
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 from flask import Flask
@@ -10,11 +9,7 @@ from flask import Flask
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
-"""`main` is the top level module for your Flask application."""
-
-# Import the Flask Framework
-
-app = Flask(__name__)
+app = Flask("pybot-1023")
 
 
 @app.route('/')

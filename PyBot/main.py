@@ -58,8 +58,8 @@ def wh():
     if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = code.InteractiveInterpreter()
         global_code_dict[chat_id].runcode("import sys")
-        global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'w+')".format(str(chat_id) + "stdout"))
-        global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'w+')".format(str(chat_id) + "stderr"))
+        global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'rw+')".format(str(chat_id) + "stdout"))
+        global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'rw+')".format(str(chat_id) + "stderr"))
         
     if text[0] == '/':
         if text == '/start':

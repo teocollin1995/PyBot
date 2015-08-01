@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, Response
 import code
 from StringIO import StringIO
 import sys
-from contexlib import contextmanager
+from contextlib import contextmanager
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 

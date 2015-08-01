@@ -42,6 +42,8 @@ def wh():
     message_id = message.get('message_id')
     date = message.get('date')
     text = message.get('text')
+    logging.info("text:")
+    logging.info(text)
     fr = message.get('from')
     chat = message['chat']
     chat_id = chat['id']
@@ -118,6 +120,8 @@ def wh():
         #out.close()
         #err.close()
         cmd_res = f.getvalue() + g.getvalue()
+        logging.info("cmd result:")
+        logging.info(cmd_res)
         global_code_dict[chat_id].resetbuffer()
         give_response(chat_id, cmd_res)
     resp = Response(r, status=200)

@@ -4,8 +4,7 @@ import urllib
 import urllib2
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
-from flask import Flask
-from flask import request, jsonify
+from flask import Flask, jsonify, request
 
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
@@ -22,7 +21,7 @@ def set_webhook():
     urlfetch.set_default_fetch_deadline(60)
     return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'setWebhook', urllib.urlencode({'url': "https://pybot-1023.appspot.com/webhook"}))))
 
-@app.route('/webhook', method=["PUT", "POST"])
+@app.route('/webhook', methods=["PUT", "POST"])
 def wh():
     urlfetch.set_default_fetch_deadline(60)
     data = jsonify(json.loads(request.data))

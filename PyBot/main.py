@@ -16,12 +16,11 @@ def display_me():
     urlfetch.set_default_fetch_deadline(60)
     return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'getMe')))
 
-@app.route('/sebwh/<url>')
+@app.route('/sebwh')
 def set_webhook(url):
-    return url
     urlfetch.set_default_fetch_deadline(60)
     if url:
-        return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'setWebhook', urllib.urlencode({'url': url}))))
+        return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'setWebhook', urllib.urlencode({'url': "https://pybot-1023.appspot.com/webhook"}))))
 
 
 @app.route('/')

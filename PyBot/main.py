@@ -55,8 +55,7 @@ def wh():
                 'reply_to_message_id': str(message_id),
             })).read()
             
-    resp = Response(r, status=200)
-    return resp
+        
             
     #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
     @contextmanager
@@ -121,6 +120,8 @@ def wh():
         cmd_res = f.getvalue() + g.getvalue()
         global_code_dict[chat_id].resetbuffer()
         give_response(chat_id, cmd_res)
+    resp = Response(r, status=200)
+    return resp
         
     
 

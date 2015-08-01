@@ -4,7 +4,7 @@ import urllib
 import urllib2
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
@@ -27,6 +27,7 @@ def wh():
     r = request.get_json()
     logging.info("raw request:")
     logging.info(r)
+    Response(jsonify(r))
     body = r
     logging.info('request body:')
     logging.info(body)

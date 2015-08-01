@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, Response
 import code
 from StringIO import StringIO
 import sys
-
+from contexlib import contextmanager
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
@@ -55,12 +55,14 @@ def wh():
                 'reply_to_message_id': str(message_id),
             })).read()
     #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
+    @contextmanager
     def redirect_stdout(new_target):
         old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
         try:
             yield new_target # run some code with the replaced stdout
         finally:
             sys.stdout = old_target # restore to the previous value
+    @contextmanager
     def redirect_stderr(new_target):
         old_target, sys.stderr = sys.stderr, new_target # replace sys.stdout
         try:
@@ -96,8 +98,8 @@ def wh():
     else:
         f = StringIO()
         g = StringIO()
+        
         with redirect_stdout(f):
-
             
             global_code_dict[chat_id].push(text)
         #global_code_dict[chat_id].runcode("sys.stdout.close()")

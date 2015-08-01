@@ -57,7 +57,7 @@ def wh():
     
     if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = code.InteractiveInterpreter()
-        global_code_dict[chat_id].runcode("import system")
+        global_code_dict[chat_id].runcode("import sys")
         global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'w+')".format(str(chat_id) + "stdout"))
         global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'w+')".format(str(chat_id) + "stderr"))
         

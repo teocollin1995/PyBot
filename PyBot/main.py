@@ -97,8 +97,9 @@ def wh():
         f = StringIO()
         g = StringIO()
         with redirect_stdout(f):
-            with redirect_stderr(g):
-                global_code_dict[chat_id].push(text)
+
+            
+            global_code_dict[chat_id].push(text)
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")
         #out = open("{}".format(str(chat_id) + "stdout"), 'rw+')

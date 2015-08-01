@@ -95,7 +95,7 @@ def wh():
         give_response(chat_id, "Ass!", message_id)
     else:
         f = StringIO()
-        g = StringIO
+        g = StringIO()
         with redirect_stdout(f):
             with redirect_stderr(g):
                 global_code_dict[chat_id].push(text)

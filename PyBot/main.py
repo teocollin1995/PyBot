@@ -63,21 +63,21 @@ def wh():
         
     if text[0] == '/':
         if text == '/start':
-            give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro", message_id))
+            give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro", message_id)
         elif text == '/clear':
             del global_code_dict[chat_id]
         else:
-            give_response(chat_id, "Action not allowed, ass", message_id))
+            give_response(chat_id, "Action not allowed, ass", message_id)
     elif 'import os' in text:
-        give_response(chat_id, "Ass!", message_id))
+        give_response(chat_id, "Ass!", message_id)
     elif 'sys.' in text:
-        give_response(chat_id, "Ass!", message_id))
+        give_response(chat_id, "Ass!", message_id)
     elif 'from os' in text:
-        give_response(chat_id, "Ass!", message_id))
+        give_response(chat_id, "Ass!", message_id)
     elif 'from sys' in text:
-        give_response(chat_id, "Ass!", message_id))
+        give_response(chat_id, "Ass!", message_id)
     elif 'import sys' in text:
-        give_response(chat_id, "Ass!", message_id))
+        give_response(chat_id, "Ass!", message_id)
     else:
         global_code_dict[chat_id].runcode(text)
         global_code_dict[chat_id].runcode("sys.stdout.close()")
@@ -91,7 +91,7 @@ def wh():
         err.truncate()
         out.close()
         err.close()
-        give_response(chat_id, cmd_res, message_id))
+        give_response(chat_id, cmd_res, message_id)
         
     
 

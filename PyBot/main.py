@@ -26,7 +26,8 @@ def set_webhook():
 def wh():
     urlfetch.set_default_fetch_deadline(60)
     data = jsonify(json.loads(request.data))
-    return data
+    logging.info(data)
+    print data
 
 @app.route('/')
 def hello():

@@ -27,6 +27,14 @@ def wh():
     body = jsonify(json.loads(request.data))
     logging.info('request body:')
     logging.info(body)
+    update_id = body['update_id']
+    message = body['message']
+    message_id = message.get('message_id')
+    date = message.get('date')
+    text = message.get('text')
+    fr = message.get('from')
+    chat = message['chat']
+    chat_id = chat['id']
     resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
         'chat_id': str(chat_id),
         'text': msg.encode('utf-8'),

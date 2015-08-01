@@ -6,6 +6,8 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 from flask import Flask, jsonify, request, Response
 import code
+from StringIO import StringIO
+import sys
 
 TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
@@ -52,14 +54,27 @@ def wh():
                 'disable_web_page_preview': 'true',
                 'reply_to_message_id': str(message_id),
             })).read()
+    #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
+    def redirect_stdout(new_target):
+        old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
+        try:
+            yield new_target # run some code with the replaced stdout
+        finally:
+            sys.stdout = old_target # restore to the previous value
+    def redirect_stderr(new_target):
+        old_target, sys.stderr = sys.stderr, new_target # replace sys.stdout
+        try:
+            yield new_target # run some code with the replaced stdout
+        finally:
+            sys.stderr = old_target # restore to the previous value
         
 
     
     if chat_id not in global_code_dict.keys():
-        global_code_dict[chat_id] = code.InteractiveInterpreter()
-        global_code_dict[chat_id].runcode("import sys")
-        global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'rw+')".format(str(chat_id) + "stdout"))
-        global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'rw+')".format(str(chat_id) + "stderr"))
+        global_code_dict[chat_id] = code.InteractiveConsole()
+        #global_code_dict[chat_id].runcode("import sys")
+        #global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'rw+')".format(str(chat_id) + "stdout"))
+        #global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'rw+')".format(str(chat_id) + "stderr"))
         
     if text[0] == '/':
         if text == '/start':
@@ -79,18 +94,23 @@ def wh():
     elif 'import sys' in text:
         give_response(chat_id, "Ass!", message_id)
     else:
-        global_code_dict[chat_id].runcode(text)
-        global_code_dict[chat_id].runcode("sys.stdout.close()")
-        global_code_dict[chat_id].runcode("sys.stderr.close()")
-        out = open("{}".format(str(chat_id) + "stdout"), 'rw+')
-        err = open("{}".format(str(chat_id) + "stderr"), 'rw+')
-        cmd_res = out.read() + err.read()
-        out.seek(0)
-        err.seek(0)
-        out.truncate()
-        err.truncate()
-        out.close()
-        err.close()
+        f = StringIO()
+        g = StringIO
+        with redirect_stdout(f):
+            with redirect_stderr(g):
+                global_code_dict[chat_id].push(text)
+        #global_code_dict[chat_id].runcode("sys.stdout.close()")
+        #global_code_dict[chat_id].runcode("sys.stderr.close()")
+        #out = open("{}".format(str(chat_id) + "stdout"), 'rw+')
+        #err = open("{}".format(str(chat_id) + "stderr"), 'rw+')
+        #cmd_res = out.read() + err.read()
+        #out.seek(0)
+        #err.seek(0)
+        #out.truncate()
+        #err.truncate()
+        #out.close()
+        #err.close()
+        cmd_res = f.getvalue() + g.getvalue()
         give_response(chat_id, cmd_res, message_id)
         
     

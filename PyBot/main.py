@@ -27,7 +27,7 @@ def wh():
     r = request.get_json()
     logging.info("raw request:")
     logging.info(r)
-    Response(jsonify(r))
+    
     body = r
     logging.info('request body:')
     logging.info(body)
@@ -46,6 +46,7 @@ def wh():
         'disable_web_page_preview': 'true',
         'reply_to_message_id': str(message_id),
     })).read()
+    return Response(jsonify(r))
     
 
 

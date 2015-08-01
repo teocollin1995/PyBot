@@ -18,6 +18,7 @@ def display_me():
 
 @app.route('/sebwh/<url>')
 def set_webhook(url):
+    return url
     urlfetch.set_default_fetch_deadline(60)
     if url:
         return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'setWebhook', urllib.urlencode({'url': url}))))

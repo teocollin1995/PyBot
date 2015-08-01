@@ -26,7 +26,7 @@ def wh():
     urlfetch.set_default_fetch_deadline(60)
     body = jsonify(json.loads(request.data))
     logging.info('request body:')
-    logging.info(data)
+    logging.info(body)
     resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
         'chat_id': str(chat_id),
         'text': msg.encode('utf-8'),

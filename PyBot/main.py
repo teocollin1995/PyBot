@@ -47,10 +47,10 @@ def wh():
     chat_id = chat['id']
     #let's do some analysis:
 
-    def give_response(chat_id, text, message_id):
+    def give_response(chat_id, msg):
             resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
                 'chat_id': str(chat_id),
-                'text': text.encode('utf-8'),
+                'text': msg.encode('utf-8'),
                 'disable_web_page_preview': 'true',
                 'reply_to_message_id': str(message_id),
             })).read()
@@ -82,21 +82,21 @@ def wh():
         
     if text[0] == '/':
         if text == '/start':
-            give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro", message_id)
+            give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro")
         elif text == '/clear':
             del global_code_dict[chat_id]
         else:
-            give_response(chat_id, "Action not allowed, ass", message_id)
+            give_response(chat_id, "Action not allowed, ass")
     elif 'import os' in text:
-        give_response(chat_id, "Ass!", message_id)
+        give_response(chat_id, "Ass!")
     elif 'sys.' in text:
-        give_response(chat_id, "Ass!", message_id)
+        give_response(chat_id, "Ass!")
     elif 'from os' in text:
-        give_response(chat_id, "Ass!", message_id)
+        give_response(chat_id, "Ass!")
     elif 'from sys' in text:
-        give_response(chat_id, "Ass!", message_id)
+        give_response(chat_id, "Ass!")
     elif 'import sys' in text:
-        give_response(chat_id, "Ass!", message_id)
+        give_response(chat_id, "Ass!")
     else:
         f = StringIO()
         g = StringIO()
@@ -118,7 +118,7 @@ def wh():
         #err.close()
         cmd_res = f.getvalue() + g.getvalue()
         global_code_dict[chat_id].resetbuffer()
-        give_response(chat_id, cmd_res, message_id)
+        give_response(chat_id, cmd_res)
         
     
 

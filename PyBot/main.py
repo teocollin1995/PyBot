@@ -100,7 +100,7 @@ def wh():
     else:
         f = StringIO()
         g = StringIO()
-        logging.
+        #logging.
         with redirect_stdout(f):
             with redirect_stderr(g):
                 global_code_dict[chat_id].push(text)

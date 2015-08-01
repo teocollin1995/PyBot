@@ -98,11 +98,11 @@ def wh():
     else:
         f = StringIO()
         g = StringIO()
-        
+        logging.
         with redirect_stdout(f):
             with redirect_stderr(g):
-            
                 global_code_dict[chat_id].push(text)
+                
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")
         #out = open("{}".format(str(chat_id) + "stdout"), 'rw+')
@@ -115,6 +115,7 @@ def wh():
         #out.close()
         #err.close()
         cmd_res = f.getvalue() + g.getvalue()
+        global_code_dict[chat_id].resetbuffer()
         give_response(chat_id, cmd_res, message_id)
         
     

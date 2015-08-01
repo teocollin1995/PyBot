@@ -25,8 +25,8 @@ def set_webhook():
 def wh():
     urlfetch.set_default_fetch_deadline(60)
     r = request.get_json()
-    logging("raw request:")
-    logging(r)
+    logging.info("raw request:")
+    logging.info(r)
     body = r
     logging.info('request body:')
     logging.info(body)

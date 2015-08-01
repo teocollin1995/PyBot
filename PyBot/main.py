@@ -56,6 +56,7 @@ def wh():
             })).read()
             
     resp = Response(r, status=200)
+    return resp
             
     #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
     @contextmanager
@@ -124,7 +125,7 @@ def wh():
     
 
     
-    return resp
+    
     
 
 

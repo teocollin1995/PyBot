@@ -55,7 +55,7 @@ def wh():
                 'reply_to_message_id': str(message_id),
             })).read()
             
-    resp = Response(r, status=200, mimetype='application/json')
+    resp = Response(r, status=200)
             
     #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
     @contextmanager

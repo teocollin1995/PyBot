@@ -11,6 +11,11 @@ BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
 app = Flask(__name__)
 
+@app.route('/me')
+def display_me():
+    urlfetch.set_default_fetch_deadline(60)
+    return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'getMe')))
+
 
 @app.route('/')
 def hello():

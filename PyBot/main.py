@@ -119,7 +119,7 @@ def wh():
         #err.truncate()
         #out.close()
         #err.close()
-        cmd_res = f.getvalue() + g.getvalue()
+        cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
         logging.info("cmd result:")
         logging.info(cmd_res)
         global_code_dict[chat_id].resetbuffer()

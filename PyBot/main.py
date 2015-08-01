@@ -54,6 +54,8 @@ def wh():
                 'disable_web_page_preview': 'true',
                 'reply_to_message_id': str(message_id),
             })).read()
+
+            
     #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
     @contextmanager
     def redirect_stdout(new_target):

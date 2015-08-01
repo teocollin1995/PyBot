@@ -96,10 +96,10 @@ def wh():
     else:
         f = StringIO()
         g = StringIO()
-        redirect_stdout(f)
+        with redirect_stdout(f):
 
             
-        global_code_dict[chat_id].push(text)
+            global_code_dict[chat_id].push(text)
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")
         #out = open("{}".format(str(chat_id) + "stdout"), 'rw+')

@@ -24,9 +24,17 @@ def set_webhook():
 @app.route('/webhook', methods=["PUT", "POST"])
 def wh():
     urlfetch.set_default_fetch_deadline(60)
-    data = jsonify(json.loads(request.data))
+    body = jsonify(json.loads(request.data))
+    logging.info('request body:')
     logging.info(data)
-    print data
+    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+        'chat_id': str(chat_id),
+        'text': msg.encode('utf-8'),
+        'disable_web_page_preview': 'true',
+        'reply_to_message_id': str(message_id),
+    })).read()
+    
+
 
 @app.route('/')
 def hello():

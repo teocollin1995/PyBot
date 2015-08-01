@@ -9,7 +9,7 @@ import code
 from StringIO import StringIO
 import sys
 from contextlib import contextmanager
-TOKEN= '50177117:AAGCMNPVi73DLAf-1hOnx6T247hfwG0hReM'
+TOKEN= '50177117:AAGVLewUdQ4t9ELxQ6nZlXyWzEsqha3wxHU'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
 app = Flask(__name__)

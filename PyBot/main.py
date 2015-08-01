@@ -123,7 +123,8 @@ def wh():
         logging.info("cmd result:")
         logging.info(cmd_res)
         global_code_dict[chat_id].resetbuffer()
-        give_response(chat_id, cmd_res)
+        if cmd_res:
+            give_response(chat_id, cmd_res)
     resp = Response(r, status=200)
     return resp
         

@@ -24,7 +24,10 @@ def set_webhook():
 @app.route('/webhook', methods=["PUT", "POST"])
 def wh():
     urlfetch.set_default_fetch_deadline(60)
-    body = json.loads(request.json)
+    r = request.get_json()
+    logging("raw request:")
+    logging(r)
+    body = r
     logging.info('request body:')
     logging.info(body)
     update_id = body['update_id']

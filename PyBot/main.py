@@ -97,6 +97,8 @@ def wh():
         elif text[0:2] == '/t':
             text = "\t" ++ text[2:]
             logging.info("indent parsed")
+        elif text == '/e':
+            text = ""
         else:
             give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:

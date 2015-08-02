@@ -82,6 +82,9 @@ def wh():
         return resp
     logging.info("text:")
     logging.info(text)
+    for x in text:
+        if x == '\t':
+            logging.info("Found an indent")
     
     def process_command(cmd):
         f = StringIO()

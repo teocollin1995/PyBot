@@ -15,6 +15,11 @@ BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 app = Flask(__name__)
 
 global_code_dict = dict()
+#global_entery_dct = dict()
+
+def agg():
+    
+    print "aggg!"
 
 @app.route('/me')
 def display_me():
@@ -41,7 +46,8 @@ def wh():
     message = body['message']
     message_id = message.get('message_id')
     date = message.get('date')
-    text = message.get('text')
+    atext = message.get('text')
+    text = atext.rstrip("\n")
     logging.info("text:")
     logging.info(text)
     fr = message.get('from')
@@ -89,7 +95,7 @@ def wh():
         elif text == '/clear':
             del global_code_dict[chat_id]
         else:
-            give_response(chat_id, "Action not allowed, ass")
+            give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:
         give_response(chat_id, "Ass!")
     elif 'sys.' in text:
@@ -103,10 +109,10 @@ def wh():
     else:
         f = StringIO()
         g = StringIO()
-        #logging.
+        executed = None
         with redirect_stdout(f):
             with redirect_stderr(g):
-                global_code_dict[chat_id].push(text)
+                executed = global_code_dict[chat_id].push(text)
                 
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")
@@ -119,12 +125,20 @@ def wh():
         #err.truncate()
         #out.close()
         #err.close()
-        cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
-        logging.info("cmd result:")
-        logging.info(cmd_res)
-        global_code_dict[chat_id].resetbuffer()
-        if cmd_res:
-            give_response(chat_id, cmd_res)
+        if executed == False:
+            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
+            logging.info("cmd result:")
+            logging.info(cmd_res)
+            global_code_dict[chat_id].resetbuffer()
+
+            if cmd_res and cmd_res != "": #not eq ""
+                give_response(chat_id, cmd_res)
+            else:
+                give_response(chat_id, "Processed command:\n{}".format(text))
+
+        else:
+            give_response(chat_id, "Processed command:\n{}".format(text))
+
     resp = Response(r, status=200)
     return resp
         

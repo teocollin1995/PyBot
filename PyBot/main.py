@@ -125,6 +125,7 @@ def wh():
         elif text[0:2] == '/t':
             text = "\t" + text[2:]
             logging.info("indent parsed")
+            process_command(text)
         elif text == '/e':
             executed = global_code_dict[chat_id].push('\n')
             give_response(chat_id, "Terminated input: {}".format(str(executed)))

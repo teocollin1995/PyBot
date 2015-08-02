@@ -101,6 +101,7 @@ def wh():
                     with redirect_stdout(f):
                         with redirect_stderr(g):
                             executed = global_code_dict[chat_id].push(text)
+                            give_response(chat_id, "Terminated input: {}".format(str(executed)))
             
         else:
             give_response(chat_id, "Action not allowed, ass!")
@@ -121,7 +122,7 @@ def wh():
         with redirect_stdout(f):
             with redirect_stderr(g):
                 executed = global_code_dict[chat_id].push(text)
-                give_response(chat_id, "Terminated input: {}".format(str(executed)))
+                
                 
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")

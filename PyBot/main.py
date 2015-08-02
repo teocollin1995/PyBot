@@ -95,7 +95,7 @@ def wh():
         elif text == '/clear':
             del global_code_dict[chat_id]
         elif text[0:2] == '/t':
-            text = "\t" ++ text[2:]
+            text = "\t" + text[2:]
             logging.info("indent parsed")
         elif text == '/e':
             executed = global_code_dict[chat_id].push(text)

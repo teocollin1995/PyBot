@@ -48,8 +48,6 @@ def wh():
     date = message.get('date')
     atext = message.get('text')
     text = atext.rstrip("\n")
-    if '\t' in text:
-        logging.info("had tab")
     logging.info("text:")
     logging.info(text)
     fr = message.get('from')
@@ -96,8 +94,9 @@ def wh():
             give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro")
         elif text == '/clear':
             del global_code_dict[chat_id]
-        elif text[0:2] == "/t":
+        elif text[0:2] == '/t':
             text = "\t" ++ text[2:]
+            logging.info("indent parsed")
         else:
             give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:

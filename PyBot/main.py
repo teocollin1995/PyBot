@@ -44,9 +44,19 @@ def wh():
     #get items:
     update_id = body['update_id']
     message = body['message']
+    fr = message.get('from')
+    chat = message['chat']
+    chat_id = chat['id']
     message_id = message.get('message_id')
     date = message.get('date')
     atext = message.get('text')
+        def give_response(chat_id, msg):
+            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                'chat_id': str(chat_id),
+                'text': msg,
+                'disable_web_page_preview': 'true',
+                'reply_to_message_id': str(message_id),
+            })).read()
     try:
         text = atext.rstrip("\n")
     except AttributeError:
@@ -56,18 +66,10 @@ def wh():
                 return resp
     logging.info("text:")
     logging.info(text)
-    fr = message.get('from')
-    chat = message['chat']
-    chat_id = chat['id']
+    
     
 
-    def give_response(chat_id, msg):
-            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                'chat_id': str(chat_id),
-                'text': msg,
-                'disable_web_page_preview': 'true',
-                'reply_to_message_id': str(message_id),
-            })).read()
+
             
         
             

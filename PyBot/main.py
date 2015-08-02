@@ -98,7 +98,8 @@ def wh():
             text = "\t" + text[2:]
             logging.info("indent parsed")
         elif text == '/e':
-            executed = global_code_dict[chat_id].push(text)
+            
+            executed = global_code_dict[chat_id].push("")
             give_response(chat_id, "Terminated input: {}".format(str(executed)))
             
         else:

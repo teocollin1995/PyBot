@@ -48,12 +48,14 @@ def wh():
     date = message.get('date')
     atext = message.get('text')
     text = atext.rstrip("\n")
+    if '\t' in text:
+        logging.info("had tab")
     logging.info("text:")
     logging.info(text)
     fr = message.get('from')
     chat = message['chat']
     chat_id = chat['id']
-    #let's do some analysis:
+    
 
     def give_response(chat_id, msg):
             resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({

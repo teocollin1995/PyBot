@@ -121,6 +121,7 @@ def wh():
         with redirect_stdout(f):
             with redirect_stderr(g):
                 executed = global_code_dict[chat_id].push(text)
+                logging.info("Executed command with result: {}".format(str(executed)))
                 
                 
         #global_code_dict[chat_id].runcode("sys.stdout.close()")

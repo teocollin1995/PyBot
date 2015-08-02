@@ -47,7 +47,13 @@ def wh():
     message_id = message.get('message_id')
     date = message.get('date')
     atext = message.get('text')
-    text = atext.rstrip("\n")
+    try:
+        text = atext.rstrip("\n")
+    except AttributeError:
+                give_response(chat_id, "Action not allowed, ass".format(text))
+
+                resp = Response(r, status=200)
+                return resp
     logging.info("text:")
     logging.info(text)
     fr = message.get('from')
@@ -114,7 +120,7 @@ def wh():
         give_response(chat_id, "Ass!")
     elif 'import sys' in text:
         give_response(chat_id, "Ass!")
-    else:
+    else: # make this into a function
         f = StringIO()
         g = StringIO()
         executed = None

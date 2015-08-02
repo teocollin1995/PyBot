@@ -96,6 +96,8 @@ def wh():
             give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro")
         elif text == '/clear':
             del global_code_dict[chat_id]
+        elif text[0:1] == '/t':
+            text = "\t" ++ text[2:]
         else:
             give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:

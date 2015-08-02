@@ -35,7 +35,23 @@ def set_webhook():
 
 @app.route('/webhook', methods=["PUT", "POST"])
 def wh():
-    
+    #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
+    @contextmanager
+    def redirect_stdout(new_target):
+        old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
+        try:
+            yield new_target # run some code with the replaced stdout
+        finally:
+            sys.stdout = old_target # restore to the previous value
+    @contextmanager
+    def redirect_stderr(new_target):
+        old_target, sys.stderr = sys.stderr, new_target # replace sys.stdout
+        try:
+            yield new_target # run some code with the replaced stdout
+        finally:
+            sys.stderr = old_target # restore to the previous value
+        
+
     urlfetch.set_default_fetch_deadline(60)
     r = request.get_json()
     logging.info("raw request:")
@@ -60,35 +76,39 @@ def wh():
     try:
         text = atext.rstrip("\n")
     except AttributeError:
-                give_response(chat_id, "Action not allowed, ass")
-
-                resp = Response(r, status=200)
-                return resp
+        logging.info("Included non-text content")
+        give_response(chat_id, "Action not allowed, ass")
+        resp = Response(r, status=200)
+        return resp
     logging.info("text:")
     logging.info(text)
     
+    def process_command(cmd):
+        f = StringIO()
+        g = StringIO()
+        executed = None
+        with redirect_stdout(f):
+            with redirect_stderr(g):
+                executed = global_code_dict[chat_id].push(cmd)
+                logging.info("Executed command with result: {}".format(str(executed)))
+                
+
+        if executed == False:
+            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
+            logging.info("cmd result:")
+            logging.info(cmd_res)
+            global_code_dict[chat_id].resetbuffer()
+            give_response(chat_id, cmd_res);
+        else:
+            logging.info("Waiting for further input")
+            give_response(chat_id, "Processed command:\n{}".format(cmd))
+            
+        
+
+
     
 
-
-            
-        
-            
-    #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
-    @contextmanager
-    def redirect_stdout(new_target):
-        old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
-        try:
-            yield new_target # run some code with the replaced stdout
-        finally:
-            sys.stdout = old_target # restore to the previous value
-    @contextmanager
-    def redirect_stderr(new_target):
-        old_target, sys.stderr = sys.stderr, new_target # replace sys.stdout
-        try:
-            yield new_target # run some code with the replaced stdout
-        finally:
-            sys.stderr = old_target # restore to the previous value
-        
+                        
 
     
     if chat_id not in global_code_dict.keys():
@@ -106,10 +126,10 @@ def wh():
             text = "\t" + text[2:]
             logging.info("indent parsed")
         elif text == '/e':
-            
-            executed = global_code_dict[chat_id].push("")
+            executed = global_code_dict[chat_id].push('\n')
             give_response(chat_id, "Terminated input: {}".format(str(executed)))
-            
+            resp = Response(r, status=200)
+            return resp
         else:
             give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:
@@ -123,40 +143,7 @@ def wh():
     elif 'import sys' in text:
         give_response(chat_id, "Ass!")
     else: # make this into a function
-        f = StringIO()
-        g = StringIO()
-        executed = None
-        with redirect_stdout(f):
-            with redirect_stderr(g):
-                executed = global_code_dict[chat_id].push(text)
-                logging.info("Executed command with result: {}".format(str(executed)))
-                
-                
-        #global_code_dict[chat_id].runcode("sys.stdout.close()")
-        #global_code_dict[chat_id].runcode("sys.stderr.close()")
-        #out = open("{}".format(str(chat_id) + "stdout"), 'rw+')
-        #err = open("{}".format(str(chat_id) + "stderr"), 'rw+')
-        #cmd_res = out.read() + err.read()
-        #out.seek(0)
-        #err.seek(0)
-        #out.truncate()
-        #err.truncate()
-        #out.close()
-        #err.close()
-        if executed == False:
-            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
-            logging.info("cmd result:")
-            logging.info(cmd_res)
-            global_code_dict[chat_id].resetbuffer()
-
-            if cmd_res and cmd_res != "": #not eq ""
-                give_response(chat_id, cmd_res)
-            else:
-                give_response(chat_id, "Processed command:\n{}".format(text))
-
-        else:
-            give_response(chat_id, "Processed command:\n{}".format(text))
-
+        process_command(text)
     resp = Response(r, status=200)
     return resp
         

@@ -60,7 +60,7 @@ def wh():
     try:
         text = atext.rstrip("\n")
     except AttributeError:
-                give_response(chat_id, "Action not allowed, ass".format(text))
+                give_response(chat_id, "Action not allowed, ass")
 
                 resp = Response(r, status=200)
                 return resp

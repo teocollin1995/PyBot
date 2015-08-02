@@ -98,7 +98,10 @@ def wh():
             text = "\t" ++ text[2:]
             logging.info("indent parsed")
         elif text == '/e':
-            text = ""
+                    with redirect_stdout(f):
+                        with redirect_stderr(g):
+                            executed = global_code_dict[chat_id].push(text)
+            
         else:
             give_response(chat_id, "Action not allowed, ass!")
     elif 'import os' in text:
@@ -118,6 +121,7 @@ def wh():
         with redirect_stdout(f):
             with redirect_stderr(g):
                 executed = global_code_dict[chat_id].push(text)
+                give_response(chat_id, "Terminated input: {}".format(str(executed)))
                 
         #global_code_dict[chat_id].runcode("sys.stdout.close()")
         #global_code_dict[chat_id].runcode("sys.stderr.close()")

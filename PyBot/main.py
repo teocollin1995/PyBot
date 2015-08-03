@@ -173,6 +173,8 @@ def wh():
             
         
     #last bit of logic for deciding what to do with the text
+    pymod = global_code_dict[chat_id].python_mode(fr)
+    logging.info("python mode is {}".format(pymod))
     if text[0] == '/':
         #check if they want to toggle python mode
         if text[0:3] == '/py':
@@ -180,9 +182,8 @@ def wh():
             give_response(chat_id, "Toggled python input mode to {}".format(global_code_dict[chat_id].python_mode(fr)))
             resp = Response(r, status=200)
             return resp
-        logging.info("python mode is {}".format(global_code_dict[chat_id].python_mode(fr)))
-        #check if they are in python mode to start with
-        elif not global_code_dict[chat_id].python_mode(fr):
+            #check if they are in python mode to start with
+        elif not pymod:
             logging.info("Discarding input")
             resp = Response(r, status=200) #discard if they are not in python mode
             return resp

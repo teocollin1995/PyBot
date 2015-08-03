@@ -83,7 +83,7 @@ def wh():
     logging.info("text:")
     logging.info(text)
     for x in text:
-        logging.info("Looking for indent")
+        logging.info("Looking for indent: {}".format(x))
         #not showing up...
         if x == '\t':
             logging.info("Found an indent")

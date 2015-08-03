@@ -10,7 +10,7 @@ import code
 from StringIO import StringIO
 import sys
 from contextlib import contextmanager
-TOKEN= '50177117:AAGVLewUdQ4t9ELxQ6nZlXyWzEsqha3wxHU'
+TOKEN= '50177117:AAGY6H4Q5QCqwP_uTy1J3tFnJW1Q1oS-K20'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
 app = Flask(__name__)
@@ -123,9 +123,7 @@ def wh():
     
     if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = code.InteractiveConsole()
-        #global_code_dict[chat_id].runcode("import sys")
-        #global_code_dict[chat_id].runcode("sys.stdout = open('{}', 'rw+')".format(str(chat_id) + "stdout"))
-        #global_code_dict[chat_id].runcode("sys.stderr = open('{}', 'rw+')".format(str(chat_id) + "stderr"))
+        
         
     if text[0] == '/':
         if text == '/start':

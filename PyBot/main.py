@@ -10,6 +10,7 @@ import code
 from StringIO import StringIO
 import sys
 from contextlib import contextmanager
+import requests as req
 TOKEN= '50177117:AAGY6H4Q5QCqwP_uTy1J3tFnJW1Q1oS-K20'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
@@ -18,9 +19,7 @@ app = Flask(__name__)
 global_code_dict = dict()
 #global_entery_dct = dict()
 
-def agg():
-    
-    print "aggg!"
+
 
 @app.route('/me')
 def display_me():

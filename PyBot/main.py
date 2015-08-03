@@ -180,6 +180,7 @@ def wh():
             give_response(chat_id, "Toggled python input mode to {}".format(global_code_dict[chat_id].python_mode(fr)))
             resp = Response(r, status=200)
             return resp
+        logging.info("python mode is {}".format(global_code_dict[chat_id].python_mode(fr)))
         #check if they are in python mode to start with
         elif not global_code_dict[chat_id].python_mode(fr):
             logging.info("Discarding input")

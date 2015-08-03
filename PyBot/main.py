@@ -88,7 +88,8 @@ def wh():
     #things present in all messages that we want to process:
     
     message = body['message']
-    fr = message.get('from')
+    from_section = message.get('from')
+    fr = from_section["username"] + from_section["last_name"] + from_section["first_name"]
     chat = message['chat']
     chat_id = chat['id']
     message_id = message.get('message_id')

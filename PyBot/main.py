@@ -117,7 +117,7 @@ def wh():
         else:
             atext = message.get('left_chat_participant')
             if atext != None:
-                del global_code_dict[chat_id]
+                global_code_dict[chat_id].clear()
                 resp = Response(r, status=200)
                 return resp
             else:

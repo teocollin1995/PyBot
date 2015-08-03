@@ -31,6 +31,8 @@ class ChatInfo:
         self.members[user] = False
     def change_user_usage(self,user):
         self.members[user] = True
+    def python_mode(self, user):
+        return self.members[user]
     
         
         
@@ -133,8 +135,9 @@ def wh():
     #ensure that if we pass this point, the user has been initalized
     if not global_code_dict[chat_id].is_user(fr):
         global_code_dict[chat_id].add_user(fr)
-        
-    
+        #allow user to start sending code immeditately if they are not starting in a group chat
+        if not global_code_dict[chat_id].group_chat:
+            global_code_dict[chat_id].change_user_usage(fr)
 
     
     #deal with special chars:
@@ -144,6 +147,8 @@ def wh():
     #this is sloppy, fix it
     logging.info("text:")
     logging.info(text)
+
+    
     # we can now define process command
     def process_command(cmd):
         f = StringIO()
@@ -166,28 +171,34 @@ def wh():
             give_response(chat_id, "Processed command:\n{}".format(cmd))
             
         
-        
+    #last bit of logic for deciding what to do with the text
     if text[0] == '/':
-        if text == '/start':
-            give_response(chat_id, "Ready. Please input command. Type /clear to clear enviro")
-        elif text == '/clear':
-            global_code_dict[chat_id].clear()
-        elif text[0:2] == '/t':
-            text = "\t" + text[2:]
-            logging.info("indent parsed")
-            process_command(text)
-        elif text[0:3] == '/py':
+        #check if they want to toggle python mode
+        if text[0:3] == '/py':
             global_code_dict[chat_id].change_user_usage(fr)
             give_response(chat_id, "Toggled python input mode")
             resp = Response(r, status=200)
             return resp
-        elif text == '/e':
+        #check if they are in python mode to start with
+        elif not global_code_dict[chat_id].python_mode(fr):
+            resp = Response(r, status=200) #discard if they are not in python mode
+            return resp
+        elif text == '/start': #give document
+            give_response(chat_id, document)
+        elif text == '/clear': #clear enviroment
+            global_code_dict[chat_id].clear()
+        elif text[0:2] == '/t': #depricated:
+            text = "\t" + text[2:]
+            logging.info("indent parsed")
+            process_command(text)
+        elif text == '/e': #finish a multiline input
             executed = global_code_dict[chat_id].push('\n')
             give_response(chat_id, "Terminated input: {}".format(str(executed)))
             resp = Response(r, status=200)
             return resp
         else:
             give_response(chat_id, "Action not allowed, ass!")
+    #assuming there are no commands, let's check for any imports that we might not like
     elif 'import os' in text:
         give_response(chat_id, "Ass!")
     elif 'sys.' in text:
@@ -199,8 +210,9 @@ def wh():
     elif 'import sys' in text:
         give_response(chat_id, "Ass!")
     else: # make this into a function
-        process_command(text)
-    resp = Response(r, status=200)
+        process_command(text) #finally, do something
+
+    resp = Response(r, status=200) #say that something happened
     return resp
         
     

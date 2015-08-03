@@ -83,8 +83,12 @@ def wh():
     logging.info("text:")
     logging.info(text)
     for x in text:
+        logging.info("Looking for indent")
+        #not showing up...
         if x == '\t':
             logging.info("Found an indent")
+
+            
     
     def process_command(cmd):
         f = StringIO()

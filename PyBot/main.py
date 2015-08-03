@@ -24,13 +24,13 @@ class ChatInfo:
         self.members = dict([('admin',True)])
         self.code = code.InteractiveConsole()
     def clear(self):
-        self.code = code.InteractiveConsole()
+        global self.code = code.InteractiveConsole()
     def is_user(self, user):
         return user in self.members.keys()
     def add_user(self, user):
-        self.members[user] = False
+        global self.members[user] = False
     def change_user_usage(self,user):
-        self.members[user] = not self.members[user]
+        global self.members[user] = not self.members[user]
     def python_mode(self, user):
         return self.members[user]
     

@@ -11,7 +11,7 @@ from StringIO import StringIO
 import sys
 from contextlib import contextmanager
 import requests as req
-TOKEN= '50177117:AAGY6H4Q5QCqwP_uTy1J3tFnJW1Q1oS-K20'
+TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
 app = Flask(__name__)

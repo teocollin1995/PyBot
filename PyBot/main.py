@@ -86,7 +86,7 @@ def wh():
     i = 0
     while i+2 < textlen:
         if text[i:i+2] == "\\t":
-            logging.info("found indent")
+            logging.info("found indent: {}".format(text[i:i+2]))
 
             
     

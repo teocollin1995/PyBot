@@ -20,7 +20,7 @@ TBA
 class ChatInfo:
     def __init__(self, chat_id, group_chat = False):
         self.chat_id = chat_id
-        self.group = group_chat
+        self.group_chat = group_chat
         self.members = dict([('admin',True)])
         self.code = code.InteractiveConsole()
     def clear(self):

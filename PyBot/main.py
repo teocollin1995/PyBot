@@ -1,3 +1,4 @@
+import string
 import json
 import logging
 import urllib
@@ -74,20 +75,19 @@ def wh():
             'reply_to_message_id': str(message_id),
         })).read()
     try:
-        text = atext.rstrip("\n")
+        btext = atext.rstrip("\n")
     except AttributeError:
         logging.info("Included non-text content")
         give_response(chat_id, "Action not allowed, ass")
         resp = Response(r, status=200)
         return resp
+    
+    #deal with special chars:
+    text = string.replace(btext, "\\t", '\t')
     logging.info("text:")
     logging.info(text)
-    textlen = len(text)
-    i = 0
-    while i+2 < textlen:
-        if text[i:i+2] == "\\t":
-            logging.info("found indent: {}".format(text[i:i+2]))
-        i+=1
+    
+    
 
             
     

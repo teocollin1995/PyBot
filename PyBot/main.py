@@ -120,7 +120,7 @@ def wh():
         else:
             atext = message.get('left_chat_participant')
             if atext != None:
-                global_code_dict[chat_id].clear()
+                #global_code_dict[chat_id].clear() don't implement until nuetral
                 resp = Response(r, status=200)
                 return resp
             else:

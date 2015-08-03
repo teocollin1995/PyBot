@@ -82,11 +82,11 @@ def wh():
         return resp
     logging.info("text:")
     logging.info(text)
-    for x in text:
-        logging.info("Looking for indent: {}".format(x))
-        #not showing up...
-        if x == '\t':
-            logging.info("Found an indent")
+    textlen = len(a)
+    i = 0
+    while i+2 < textlen:
+        if text[i:i+2] == "\\t":
+            logging.info("found indent")
 
             
     

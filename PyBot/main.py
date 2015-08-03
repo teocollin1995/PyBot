@@ -82,7 +82,7 @@ def wh():
         return resp
     logging.info("text:")
     logging.info(text)
-    textlen = len(a)
+    textlen = len(text)
     i = 0
     while i+2 < textlen:
         if text[i:i+2] == "\\t":

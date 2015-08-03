@@ -30,7 +30,7 @@ class ChatInfo:
     def add_user(self, user):
         self.members[user] = False
     def change_user_usage(self,user):
-        self.members[user] = True
+        self.members[user] = not self.members[user]
     def python_mode(self, user):
         return self.members[user]
     

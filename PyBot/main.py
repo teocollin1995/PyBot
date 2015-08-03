@@ -128,7 +128,7 @@ def wh():
     
     #ensure that if we pass this point, a chat object exists
     if chat_id not in global_code_dict.keys():
-        global_code_dict[chat_id] = ChatInfo()
+        global_code_dict[chat_id] = ChatInfo(chat_id)
                 
     #ensure that if we pass this point, the user has been initalized
     if not global_code_dict[chat_id].is_user(fr):

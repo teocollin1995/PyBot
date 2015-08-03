@@ -182,6 +182,7 @@ def wh():
             return resp
         #check if they are in python mode to start with
         elif not global_code_dict[chat_id].python_mode(fr):
+            logging.info("Discarding input")
             resp = Response(r, status=200) #discard if they are not in python mode
             return resp
         elif text == '/start': #give document

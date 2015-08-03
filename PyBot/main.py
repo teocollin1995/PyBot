@@ -83,7 +83,9 @@ def wh():
         return resp
     
     #deal with special chars:
-    text = string.replace(btext, "\\t", '\t')
+    ctext = string.replace(btext, "\\t", '\t')
+    text = string.replace(ctext, "\\n", '\n')
+    #this is sloppy, fix it
     logging.info("text:")
     logging.info(text)
     

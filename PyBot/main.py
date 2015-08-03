@@ -177,7 +177,7 @@ def wh():
         #check if they want to toggle python mode
         if text[0:3] == '/py':
             global_code_dict[chat_id].change_user_usage(fr)
-            give_response(chat_id, "Toggled python input mode")
+            give_response(chat_id, "Toggled python input mode to {}".format(global_code_dict[chat_id].python_mode(fr)))
             resp = Response(r, status=200)
             return resp
         #check if they are in python mode to start with

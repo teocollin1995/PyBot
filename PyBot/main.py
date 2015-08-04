@@ -29,33 +29,6 @@ class ChatInfo(ndb.Model):
     console = ndb.PickleProperty()
     members = ndb.StructuredProperty(Member, repeated=True)
 
-    
-
- """
-
-class ChatInfo(ndb.):
-
-    
-   def __init__(self, chat_id, group_chat = False):
-        self.chat_id = chat_id
-        self.group_chat = group_chat
-        self.members = dict([('admin',True)])
-        self.code = code.InteractiveConsole()
-    def clear(self):
-        self.code = code.InteractiveConsole()
-    def is_user(self, user):
-        return user in self.members.keys()
-    def add_user(self, user):
-        self.members[user] = False
-    def change_user_usage(self,user):
-        self.members[user] = not self.members[user]
-    def python_mode(self, user):
-        return self.members[user]"""
-    
-        
-        
-    
-        
 
 app = Flask(__name__)
 

@@ -11,6 +11,7 @@ from StringIO import StringIO
 import sys
 from contextlib import contextmanager
 import requests as req
+import dill
 TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 document = """
@@ -23,8 +24,11 @@ class Member(ndb.Model):
     pymode = ndb.BooleanProperty()
 
 class ChatInfo(ndb.Model):
-    chat_id = ndb.StringProperty()
+    chat_id = ndb.StringProperty() #This will be our key
     group_chat = ndb.BooleanProperty()
+    console = ndb.PickleProperty()
+    members = ndb.StructuredProperty(Member, repeated=True)
+    
 
 
 

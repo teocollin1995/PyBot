@@ -128,7 +128,7 @@ def wh():
                 return resp
     
     #ensure that if we pass this point, a chat object exists
-   """ if chat_id not in global_code_dict.keys():
+gerr = """ if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = ChatInfo(chat_id)
                 
     #ensure that if we pass this point, the user has been initalized

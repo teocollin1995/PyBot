@@ -17,22 +17,35 @@ document = """
 TBA
 """
 
-class ChatInfo:
-    def __init__(self, chat_id, group_chat = False):
+
+class Member(ndb.Model):
+    name = ndb.StringProperty()
+    pymode = ndb.BooleanProperty()
+
+class ChatInfo(ndb.Model):
+    chat_id = ndb.StringProperty()
+    group_chat = ndb.BooleanProperty()
+
+
+
+class ChatInfo(ndb.):
+
+    
+   """ def __init__(self, chat_id, group_chat = False):
         self.chat_id = chat_id
         self.group_chat = group_chat
         self.members = dict([('admin',True)])
         self.code = code.InteractiveConsole()
     def clear(self):
-        global self.code = code.InteractiveConsole()
+        self.code = code.InteractiveConsole()
     def is_user(self, user):
         return user in self.members.keys()
     def add_user(self, user):
-        global self.members[user] = False
+        self.members[user] = False
     def change_user_usage(self,user):
-        global self.members[user] = not self.members[user]
+        self.members[user] = not self.members[user]
     def python_mode(self, user):
-        return self.members[user]
+        return self.members[user]"""
     
         
         

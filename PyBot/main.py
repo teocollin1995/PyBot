@@ -28,14 +28,15 @@ class ChatInfo(ndb.Model):
     group_chat = ndb.BooleanProperty()
     console = ndb.PickleProperty()
     members = ndb.StructuredProperty(Member, repeated=True)
+
     
 
-
+ """
 
 class ChatInfo(ndb.):
 
     
-   """ def __init__(self, chat_id, group_chat = False):
+   def __init__(self, chat_id, group_chat = False):
         self.chat_id = chat_id
         self.group_chat = group_chat
         self.members = dict([('admin',True)])
@@ -58,7 +59,7 @@ class ChatInfo(ndb.):
 
 app = Flask(__name__)
 
-global_code_dict = dict() #dict of chatInfos
+#global_code_dict = dict() #dict of chatInfos
 
 
 
@@ -130,14 +131,21 @@ def wh():
         # it is a group message or something we don't like'
         atext = message.get(u'new_chat_participant') #tis a new message from a group.
         if atext != None:
-            global_code_dict[chat_id] = ChatInfo(chat_id, group_chat = True)
+            group_chat = ChatInfo(id = chat_id)
+            group_chat.group_chat = True
+            group_chat.chat_id = chat_id
+            group_chat.console = dill.dumps(code.InteractiveConsole())
+            group_chat.members = [Member(name=fr,pymode=False)]
+            group_chat.key.id()
+            group_chat.push()
             give_response(chat_id, document)
             resp = Response(r, status=200)
             return resp
         else:
             atext = message.get('left_chat_participant')
             if atext != None:
-                #global_code_dict[chat_id].clear() don't implement until nuetral
+                del_group_chat = ChatInfo.get_by_id(chat_id)
+                del_group_chat.key.delete()
                 resp = Response(r, status=200)
                 return resp
             else:
@@ -147,7 +155,7 @@ def wh():
                 return resp
     
     #ensure that if we pass this point, a chat object exists
-    if chat_id not in global_code_dict.keys():
+   """ if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = ChatInfo(chat_id)
                 
     #ensure that if we pass this point, the user has been initalized
@@ -234,7 +242,7 @@ def wh():
         process_command(text) #finally, do something
 
     resp = Response(r, status=200) #say that something happened
-    return resp
+    return resp"""
         
     
 

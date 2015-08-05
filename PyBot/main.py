@@ -140,8 +140,8 @@ def wh():
         else:
             atext = message.get('left_chat_participant')
             if atext != None:
-                #del_group_chat = ChatInfo.get_by_id(chat_id)
-                #del_group_chat.key.delete()
+                del_group_chat = ChatInfo.get_by_id(chat_id)
+                del_group_chat.key.delete()
                 resp = Response(r, status=200)
                 return resp
             else:

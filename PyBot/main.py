@@ -116,6 +116,13 @@ def wh():
             'disable_web_page_preview': 'true',
             'reply_to_message_id': str(message_id),
         })).read()
+    
+    @ndb.transactional
+    def in_pymode():
+        chat = ChatInfo.get_by_id(chat_id)
+        for index,b in enumerate(chat.members):
+            if b.name == fr:
+                return b.pymode
         
     #things that are variable in the mssage
     #Atext will remain none if it is a group message
@@ -175,7 +182,7 @@ def wh():
                         grab.put()
                     
                     
-                return
+                    return
                         
             else:
                 #There is no user chat and we need to create it
@@ -202,12 +209,7 @@ def wh():
     logging.info("text:")
     logging.info(text)
 
-    @ndb.transactional
-    def in_pymode():
-        chat = ChatInfo.get_by_id(chat_id)
-        for index,b in enumerate(chat.members):
-            if b.name == fr:
-                return b.pymode
+
 
     #Process text to check for commands
 

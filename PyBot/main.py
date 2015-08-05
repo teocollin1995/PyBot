@@ -278,20 +278,16 @@ def wh():
             give_response(chat_id,document)
             resp = Response(r, status=200) 
             return resp    
-        #at this point, if they are not in pymode, we should be discarding all input
-     
-        elif not in_pymode():
-            logging.info("Discarded input because in pymode")
-            resp = Response(r, status=200) 
-            return resp  
-  
-
-        
-            
         elif text == '/clear':
             clear_console()
         elif text == '/e':
             process_command('\n')
+        #at this point, if they are not in pymode, we should be discarding all input
+    elif not in_pymode():
+            logging.info("Discarded input because in pymode")
+            resp = Response(r, status=200) 
+            return resp  
+
     else:
         logging.info("Checking for illegal inputs")
         #Okay, they probably want us to process a command

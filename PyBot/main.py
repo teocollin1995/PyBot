@@ -116,6 +116,40 @@ def wh():
             'disable_web_page_preview': 'true',
             'reply_to_message_id': str(message_id),
         })).read()
+
+    @ndb.transactional
+    def create_new_user():
+        query = ChatInfo.query(ChatInfo.chat_id == chat_id)
+        if len(query) > 0:
+            #at least the chat already exists
+            #is it a group chat or a single user chat
+            if query[0].group_chat:
+                #we now need to make sure this user in the group chat exists
+                #This might not be concurrent - we might need a better way to do this.
+                user_exists = any(map(lambda x: x.name == fr, query[0].members))
+                if not user_exists:
+                    grab = ChatInfo.get_by_id(chat_id)
+                    temp = Member()
+                    temp.name = fr
+                    temp.pymode = False
+                    grab.members.append(temp)
+                    grab.put()
+                    
+                    
+                return
+                    
+        else:
+            #There is no user chat and we need to create it
+            group_chat = ChatInfo(id = chat_id)
+            group_chat.group_chat = False
+            group_chat.chat_id = chat_id
+            temp = code.InteractiveConsole()
+            temp2 = dill.dumps(temp)
+            group_chat.console = temp2
+            group_chat.members = [Member(name=fr,pymode=False)]
+            group_chat.key.id()
+            group_chat.put()
+            return 
     
     @ndb.transactional
     def in_pymode():
@@ -123,6 +157,46 @@ def wh():
         for index,b in enumerate(chat.members):
             if b.name == fr:
                 return b.pymode
+     @ndb.transactional
+     def toggle_pymode():
+         chat = ChatInfo.get_by_id(chat_id)
+         
+         for index,b in enumerate(chat.members):
+             if b.name == fr:
+                 logging.info("toggling pymode of {}".format(fr))
+                 chat.members[index].pymode = not chat.members[index].pymode 
+                 resp = Response(r, status=200) #say that something happened
+                 return resp
+
+    #now we define the command processing function
+    @ndb.transactional
+    def process_command(cmd):
+        f = StringIO()
+        g = StringIO()
+        executed = None
+        chat = ChatInfo.get_by_id(chat_id)
+        console = dill.loads(chat.console) #unpickle our console
+        
+        
+        with redirect_stdout(f):
+            with redirect_stderr(g):
+                executed = console.push(cmd) #run commands with our console
+                logging.info("Executed command with result: {}".format(str(executed)))
+                
+                
+        if executed == False:
+            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
+            logging.info("cmd result:")
+            logging.info(cmd_res)
+            console.resetbuffer()
+            give_response(chat_id, cmd_res);
+        else:
+            logging.info("Waiting for further input")
+            give_response(chat_id, "Processed command:\n{}".format(cmd))
+            
+        chat.console = dill.dumps(console)
+        chat.put()
+        return 
         
     #things that are variable in the mssage
     #Atext will remain none if it is a group message
@@ -163,39 +237,7 @@ def wh():
         #this is a user message.
         #we need to find if there is a new user and create them if needed
         #since an individual user request can start in many ways, this needs to be atomic
-        @ndb.transactional
-        def create_new_user():
-            query = ChatInfo.query(ChatInfo.chat_id == chat_id)
-            if len(query) > 0:
-                #at least the chat already exists
-                #is it a group chat or a single user chat
-                if query[0].group_chat:
-                    #we now need to make sure this user in the group chat exists
-                    #This might not be concurrent - we might need a better way to do this.
-                    user_exists = any(map(lambda x: x.name == fr, query[0].members))
-                    if not user_exists:
-                        grab = ChatInfo.get_by_id(chat_id)
-                        temp = Member()
-                        temp.name = fr
-                        temp.pymode = False
-                        grab.members.append(temp)
-                        grab.put()
-                    
-                    
-                    return
-                        
-            else:
-                #There is no user chat and we need to create it
-                group_chat = ChatInfo(id = chat_id)
-                group_chat.group_chat = False
-                group_chat.chat_id = chat_id
-                temp = code.InteractiveConsole()
-                temp2 = dill.dumps(temp)
-                group_chat.console = temp2
-                group_chat.members = [Member(name=fr,pymode=False)]
-                group_chat.key.id()
-                group_chat.put()
-                return 
+       
 
         create_new_user()
 
@@ -215,16 +257,7 @@ def wh():
 
     if text[0] == '/': #it is a command
         if text == '/py': #toggle py mode
-            @ndb.transactional
-            def toggle_pymode():
-                chat = ChatInfo.get_by_id(chat_id)
-                
-                for index,b in enumerate(chat.members):
-                    if b.name == fr:
-                        logging.info("toggling pymode of {}".format(fr))
-                        chat.members[index].pymode = not chat.members[index].pymode 
-                resp = Response(r, status=200) #say that something happened
-                return resp
+           
             toggle_pymode()
         elif text == '/start' or text == '/help' or text == '/commands':
             give_response(chat_id,document)
@@ -237,34 +270,7 @@ def wh():
             resp = Response(r, status=200) 
             return resp  
   
-        #now we define the command processing function
-        @ndb.transactional
-        def process_command(cmd):
-            f = StringIO()
-            g = StringIO()
-            executed = None
-            chat = ChatInfo.get_by_id(chat_id)
-            console = dill.loads(chat.console) #unpickle our console
-                        
-            
-            with redirect_stdout(f):
-                with redirect_stderr(g):
-                    executed = console.push(cmd) #run commands with our console
-                    logging.info("Executed command with result: {}".format(str(executed)))
-                    
 
-            if executed == False:
-                cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
-                logging.info("cmd result:")
-                logging.info(cmd_res)
-                console.resetbuffer()
-                give_response(chat_id, cmd_res);
-            else:
-                logging.info("Waiting for further input")
-                give_response(chat_id, "Processed command:\n{}".format(cmd))
-            
-            chat.console = dill.dumps(console)
-            chat.put()
         
             
         elif text == '/clear':

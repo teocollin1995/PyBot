@@ -123,7 +123,9 @@ def wh():
     atext = message.get('text')
     if atext == None:
         # it is a group message or something we don't like'
-        atext = message.get(u'new_chat_participant') #tis a new message from a group.
+        atext = message.get(u'new_chat_participant') 
+        #These don't need to be transactional as there are specific message types for the creation and
+        #destruction of groups
         if atext != None:
             group_chat = ChatInfo(id = chat_id)
             group_chat.group_chat = True
@@ -150,6 +152,56 @@ def wh():
                 resp = Response(r, status=200)
                 return resp
 
+    else:
+        #this is a user message.
+        #we need to find if there is a new user and create them if needed
+        #since an individual user request can start in many ways, this needs to be atomic
+        @ndb.transactional
+        def create_new_user():
+            query = ChatInfo.query(ChatInfo.chat_id == chat_id)
+            if len(query) > 0:
+                #at least the chat already exists
+                #is it a group chat or a single user chat
+                if query[0].group_chat:
+                    #we now need to make sure this user in the group chat exists
+                    #This might not be concurrent - we might need a better way to do this.
+                    user_exists = any(map(lambda x: x.name == fr, query[0].members))
+                    if not user_exists:
+                        grab = ChatInfo.get_by_id(chat_id)
+                        temp = Member()
+                        temp.name = fr
+                        temp.pymode = False
+                        grab.members.append(temp)
+                        grab.put()
+                    
+                    
+                return
+                        
+            else:
+                #There is no user chat and we need to create it
+                group_chat = ChatInfo(id = chat_id)
+                group_chat.group_chat = False
+                group_chat.chat_id = chat_id
+                temp = code.InteractiveConsole()
+                temp2 = dill.dumps(temp)
+                group_chat.console = temp2
+                group_chat.members = [Member(name=fr,pymode=False)]
+                group_chat.key.id()
+                group_chat.put()
+                return 
+
+        create_new_user()
+
+    #if we get past this point, we should be sure that a chat exists and the user exists
+    
+    #deal with special chars:
+    btext = atext.rstrip("\\n")
+    ctext = string.replace(btext, "\\t", '\t')
+    text = string.replace(ctext, "\\n", '\n')
+    #this is sloppy, fix it - generalize
+    logging.info("text:")
+    logging.info(text)
+
 
     resp = Response(r, status=200) #say that something happened
     return resp    
@@ -165,13 +217,7 @@ gerr = """ if chat_id not in global_code_dict.keys():
             global_code_dict[chat_id].change_user_usage(fr)
 
     
-    #deal with special chars:
-    btext = atext.rstrip("\\n")
-    ctext = string.replace(btext, "\\t", '\t')
-    text = string.replace(ctext, "\\n", '\n')
-    #this is sloppy, fix it
-    logging.info("text:")
-    logging.info(text)
+
 
     
     # we can now define process command

@@ -11,6 +11,7 @@ from StringIO import StringIO
 import sys
 from contextlib import contextmanager
 import requests as req
+import os
 if os.environ.get('SERVER_SOFTWARE','').startswith('Dev'):
     from google.appengine.tools.dev_appserver import FakeFilex
     FakeFile.ALLOWED_MODES = frozenset(['a','r', 'w', 'rb', 'U', 'rU'])

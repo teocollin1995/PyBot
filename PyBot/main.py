@@ -233,7 +233,10 @@ def wh():
             atext = message.get('left_chat_participant')
             if atext != None:
                 del_group_chat = ChatInfo.get_by_id(chat_id)
-                del_group_chat.key.delete()
+                try:
+                    del_group_chat.key.delete()
+                except AttributeError:
+                    logging.warn("Tried to delete non-existent group")
                 resp = Response(r, status=200)
                 return resp
             else:

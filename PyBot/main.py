@@ -166,10 +166,10 @@ def wh():
         
         for index,b in enumerate(chat.members):
             if b.name == fr:
-                
-                chat.members[index].pymode = not chat.members[index].pymode 
-                logging.info("toggling pymode of {} to {}".format(fr, str(chat.members[index].pymode)))
+                old = chat.members[index].pymode 
+                chat.members[index].pymode = not old
                 value = chat.members[index].pymode
+                logging.info("toggling pymode of {} from {} to {}".format(fr,old, value))
                 return value
 
     #now we define the command processing function

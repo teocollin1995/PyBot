@@ -119,14 +119,15 @@ def wh():
 
     @ndb.transactional
     def create_new_user():
-        query = ChatInfo.query(ChatInfo.chat_id == chat_id)
-        if len(query) > 0:
+        querys = ChatInfo.query(ChatInfo.chat_id == chat_id)
+        query = querys.get()
+        if query is not None:
             #at least the chat already exists
             #is it a group chat or a single user chat
-            if query[0].group_chat:
+            if query.group_chat:
                 #we now need to make sure this user in the group chat exists
                 #This might not be concurrent - we might need a better way to do this.
-                user_exists = any(map(lambda x: x.name == fr, query[0].members))
+                user_exists = any(map(lambda x: x.name == fr, query.members))
                 if not user_exists:
                     grab = ChatInfo.get_by_id(chat_id)
                     temp = Member()

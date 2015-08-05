@@ -110,12 +110,15 @@ def wh():
     #at this point we can define our reply function
     
     def give_response(chat_id, msg):
-        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-            'chat_id': str(chat_id),
-            'text': msg,
-            'disable_web_page_preview': 'true',
-            'reply_to_message_id': str(message_id),
-        })).read()
+        try:
+            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                'chat_id': str(chat_id),
+                'text': msg,
+                'disable_web_page_preview': 'true',
+                'reply_to_message_id': str(message_id),
+            })).read()
+        except HTTPError:
+            logging.warning("http error")
 
     @ndb.transactional
     def create_new_user():
@@ -263,7 +266,6 @@ def wh():
 
     if text[0] == '/': #it is a command
         if text == '/py': #toggle py mode
-           
             toggle_pymode()
         elif text == '/start' or text == '/help' or text == '/commands':
             give_response(chat_id,document)

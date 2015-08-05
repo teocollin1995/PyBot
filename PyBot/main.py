@@ -130,10 +130,10 @@ def wh():
             group_chat.chat_id = chat_id
             temp = code.InteractiveConsole()
             temp2 = dill.dumps(temp)
-            #group_chat.console 
+            group_chat.console = temp2
             group_chat.members = [Member(name=fr,pymode=False)]
             group_chat.key.id()
-            group_chat.push()
+            group_chat.put()
             give_response(chat_id, document)
             resp = Response(r, status=200)
             return resp

@@ -225,7 +225,7 @@ def wh():
         @ndb.transactional
         def in_pymode():
             chat = ChatInfo.get_by_id(chat_id)
-             for index,b in enumerate(chat.members):
+            for index,b in enumerate(chat.members):
                  if b.name == fr:
                      return b.pymode
         elif not in_pymode():

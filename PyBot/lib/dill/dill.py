@@ -537,9 +537,8 @@ def _extend():
         try:
             StockPickler.dispatch[t] = func
         except: #TypeError, PicklingError, UnpicklingError
-
-        else: 
-            pass
+            log.info("skip: %s" % t)
+        else: pass
     return
 
 # EOF

@@ -1,240 +1,53 @@
 #!/usr/bin/env python
-#
-# Author: Mike McKerns (mmckerns @caltech and @uqfoundation)
-# Copyright (c) 2008-2015 California Institute of Technology.
-# License: 3-clause BSD.  The full license text is available at:
-#  - http://trac.mystic.cacr.caltech.edu/project/pathos/browser/dill/LICENSE
+
 """
 Methods for detecting objects leading to pickling failures.
 """
 
-from __future__ import absolute_import, with_statement
-import dis
-from inspect import ismethod, isfunction, istraceback, isframe, iscode
-from inspect import getmodule
-from .pointers import parent, reference, at, parents, children
+from dill import _trace as trace
 
-from .dill import _trace as trace
-from .dill import PY3
+objects = {}
+import objtypes as types # local import of dill.objtypes
 
-
-def outermost(func): # is analogous to getsource(func,enclosing=True)
-    """get outermost enclosing object (i.e. the outer function in a closure)
-
-    NOTE: this is the object-equivalent of getsource(func, enclosing=True)
-    """
-    if PY3:
-        if ismethod(func):
-            _globals = func.__func__.__globals__ or {}
-        elif isfunction(func):
-            _globals = func.__globals__ or {}
-        else:
-            return #XXX: or raise? no matches
-        _globals = _globals.items()
+def load_types(pickleable=True, unpickleable=True):
+    """load pickleable and/or unpickleable types to dill.detect.types"""
+    import objects as _objects # local import of dill.objects
+    if pickleable:
+        objects.update(_objects.succeeds)
     else:
-        if ismethod(func):
-            _globals = func.im_func.func_globals or {}
-        elif isfunction(func):
-            _globals = func.func_globals or {}
-        else:
-            return #XXX: or raise? no matches
-        _globals = _globals.iteritems()
-    # get the enclosing source
-    from .source import getsourcelines
-    try: lines,lnum = getsourcelines(func, enclosing=True)
-    except: #TypeError, IOError
-        lines,lnum = [],None
-    code = ''.join(lines)
-    # get all possible names,objects that are named in the enclosing source
-    _locals = ((name,obj) for (name,obj) in _globals if name in code)
-    # now only save the objects that generate the enclosing block
-    for name,obj in _locals: #XXX: don't really need 'name'
-        try:
-            if getsourcelines(obj) == (lines,lnum): return obj
-        except: #TypeError, IOError
-            pass
-    return #XXX: or raise? no matches
-
-def nestedcode(func, recurse=True): #XXX: or return dict of {co_name: co} ?
-    """get the code objects for any nested functions (e.g. in a closure)"""
-    func = code(func)
-    if not iscode(func): return [] #XXX: or raise? no matches
-    nested = set()
-    for co in func.co_consts:
-        if co is None: continue
-        co = code(co)
-        if co:
-            nested.add(co)
-            if recurse: nested |= set(nestedcode(co, recurse=True))
-    return list(nested)
-
-def code(func):
-    '''get the code object for the given function or method
-
-    NOTE: use dill.source.getsource(CODEOBJ) to get the source code
-    '''
-    if PY3:
-        im_func = '__func__'
-        func_code = '__code__'
+        [objects.pop(obj,None) for obj in _objects.succeeds]
+    if unpickleable:
+        objects.update(_objects.failures)
     else:
-        im_func = 'im_func'
-        func_code = 'func_code'
-    if ismethod(func): func = getattr(func, im_func)
-    if isfunction(func): func = getattr(func, func_code)
-    if istraceback(func): func = func.tb_frame
-    if isframe(func): func = func.f_code
-    if iscode(func): return func
-    return
-
-#XXX: ugly: parse dis.dis for name after "<code object" in line and in globals?
-def referrednested(func, recurse=True): #XXX: return dict of {__name__: obj} ?
-    """get functions defined inside of func (e.g. inner functions in a closure)
-
-    NOTE: results may differ if the function has been executed or not.
-    If len(nestedcode(func)) > len(referrednested(func)), try calling func().
-    If possible, python builds code objects, but delays building functions
-    until func() is called.
-    """
-    if PY3:
-        att1 = '__code__'
-        att0 = '__func__'
-    else:
-        att1 = 'func_code' # functions
-        att0 = 'im_func'   # methods
-
-    import gc
-    funcs = set()
-    # get the code objects, and try to track down by referrence
-    for co in nestedcode(func, recurse):
-        # look for function objects that refer to the code object
-        for obj in gc.get_referrers(co):
-            # get methods
-            _ = getattr(obj, att0, None) # ismethod
-            if getattr(_, att1, None) is co: funcs.add(obj)
-            # get functions
-            elif getattr(obj, att1, None) is co: funcs.add(obj)
-            # get frame objects
-            elif getattr(obj, 'f_code', None) is co: funcs.add(obj)
-            # get code objects
-            elif hasattr(obj, 'co_code') and obj is co: funcs.add(obj)
-#     frameobjs => func.func_code.co_varnames not in func.func_code.co_cellvars
-#     funcobjs => func.func_code.co_cellvars not in func.func_code.co_varnames
-#     frameobjs are not found, however funcobjs are...
-#     (see: test_mixins.quad ... and test_mixins.wtf)
-#     after execution, code objects get compiled, and then may be found by gc
-    return list(funcs)
+        [objects.pop(obj,None) for obj in _objects.failures]
+    objects.update(_objects.registered)
+    del _objects
+    # reset contents of types to 'empty'
+    [types.__dict__.pop(obj) for obj in types.__dict__.keys() \
+                             if obj.find('Type') != -1]
+    # add corresponding types from objects to types
+    reload(types)
 
 
-def freevars(func):
-    """get objects defined in enclosing code that are referred to by func
-
-    returns a dict of {name:object}"""
-    if PY3:
-        im_func = '__func__'
-        func_code = '__code__'
-        func_closure = '__closure__'
-    else:
-        im_func = 'im_func'
-        func_code = 'func_code'
-        func_closure = 'func_closure'
-    if ismethod(func): func = getattr(func, im_func)
-    if isfunction(func):
-        closures = getattr(func, func_closure) or ()
-        func = getattr(func, func_code).co_freevars # get freevars
-    else:
-        return {}
-    return dict((name,c.cell_contents) for (name,c) in zip(func,closures))
-
-# thanks to Davies Liu for recursion of globals
-def nestedglobals(func, recurse=True):
-    """get the names of any globals found within func"""
-    func = code(func)
-    if func is None: return list()
-    from .temp import capture
-    names = set()
-    with capture('stdout') as out:
-        dis.dis(func) #XXX: dis.dis(None) disassembles last traceback
-    for line in out.getvalue().splitlines():
-        if '_GLOBAL' in line:
-            name = line.split('(')[-1].split(')')[0]
-            names.add(name)
-    for co in getattr(func, 'co_consts', tuple()):
-        if co and recurse and iscode(co):
-            names.update(nestedglobals(co, recurse=True))
-    return list(names)
-
-def referredglobals(func, recurse=True):
-    """get the names of objects in the global scope referred to by func"""
-    return globalvars(func, recurse).keys()
-
-def globalvars(func, recurse=True):
-    """get objects defined in global scope that are referred to by func
-
-    return a dict of {name:object}"""
-    if PY3:
-        im_func = '__func__'
-        func_code = '__code__'
-        func_globals = '__globals__'
-    else:
-        im_func = 'im_func'
-        func_code = 'func_code'
-        func_globals = 'func_globals'
-    if ismethod(func): func = getattr(func, im_func)
-    if isfunction(func):
-        globs = {} #FIXME: vars(getmodule(object)) # get dict of __builtins__
-        globs.update(getattr(func, func_globals) or {})
-        if not recurse:
-            func = getattr(func, func_code).co_names # get names
-        else:
-            func = set(nestedglobals(getattr(func, func_code)))
-            # find globals for all entries of func
-            for key in func.copy(): #XXX: unnecessary...?
-                func.update(globalvars(globs.get(key), recurse=True).keys())
-    else:
-        return {}
-    #NOTE: if name not in func_globals, then we skip it...
-    return dict((name,globs[name]) for name in func if name in globs)
-
-
-def varnames(func):
-    """get names of variables defined by func
-
-    returns a tuple (local vars, local vars referrenced by nested functions)"""
-    func = code(func)
-    if not iscode(func):
-        return () #XXX: better ((),())? or None?
-    return func.co_varnames, func.co_cellvars
-
-
-def baditems(obj, exact=False, safe=False): #XXX: obj=globals() ?
-    """get items in object that fail to pickle"""
-    if not hasattr(obj,'__iter__'): # is not iterable
-        return [j for j in (badobjects(obj,0,exact,safe),) if j is not None]
-    obj = obj.values() if getattr(obj,'values',None) else obj
-    _obj = [] # can't use a set, as items may be unhashable
-    [_obj.append(badobjects(i,0,exact,safe)) for i in obj if i not in _obj]
-    return [j for j in _obj if j is not None]
-
-
-def badobjects(obj, depth=0, exact=False, safe=False):
+def badobjects(obj, depth=0, exact=False):
     """get objects that fail to pickle"""
     from dill import pickles
     if not depth:
-        if pickles(obj,exact,safe): return None
+        if pickles(obj,exact): return None
         return obj
-    return dict(((attr, badobjects(getattr(obj,attr),depth-1,exact,safe)) \
-           for attr in dir(obj) if not pickles(getattr(obj,attr),exact,safe)))
+    return dict(((attr, badobjects(getattr(obj,attr),depth-1,exact=exact)) \
+           for attr in dir(obj) if not pickles(getattr(obj,attr),exact)))
 
-def badtypes(obj, depth=0, exact=False, safe=False):
+def badtypes(obj, depth=0, exact=False):
     """get types for objects that fail to pickle"""
     from dill import pickles
     if not depth:
-        if pickles(obj,exact,safe): return None
+        if pickles(obj,exact): return None
         return type(obj)
-    return dict(((attr, badtypes(getattr(obj,attr),depth-1,exact,safe)) \
-           for attr in dir(obj) if not pickles(getattr(obj,attr),exact,safe)))
+    return dict(((attr, badtypes(getattr(obj,attr),depth-1,exact=exact)) \
+           for attr in dir(obj) if not pickles(getattr(obj,attr),exact)))
 
-def errors(obj, depth=0, exact=False, safe=False):
+def errors(obj, depth=0, exact=False):
     """get errors for objects that fail to pickle"""
     from dill import pickles, copy
     if not depth:
@@ -246,13 +59,10 @@ def errors(obj, depth=0, exact=False, safe=False):
             assert type(pik) == type(obj), \
                 "Unpickling produces %s instead of %s" % (type(pik),type(obj))
             return None
-        except Exception:
-            import sys
-            return sys.exc_info()[1]
-    return dict(((attr, errors(getattr(obj,attr),depth-1,exact,safe)) \
-           for attr in dir(obj) if not pickles(getattr(obj,attr),exact,safe)))
-
-del absolute_import, with_statement
+        except Exception, err:
+            return err
+    return dict(((attr, errors(getattr(obj,attr),depth-1,exact=exact)) \
+           for attr in dir(obj) if not pickles(getattr(obj,attr),exact)))
 
 
 # EOF

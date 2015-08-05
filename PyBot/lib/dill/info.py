@@ -1,12 +1,9 @@
 # THIS FILE GENERATED FROM SETUP.PY
-this_version = '0.2.3'
-stable_version = '0.2.3'
-readme = '''-----------------------------
-dill: serialize all of python
------------------------------
-
-About Dill
-==========
+this_version = '0.2a.dev'
+stable_version = '0.1a1'
+readme = '''---------------------------------------------------
+dill: a utility for serialization of python objects
+---------------------------------------------------
 
 Dill extends python's 'pickle' module for serializing and de-serializing
 python objects to the majority of the built-in python types. Serialization
@@ -31,74 +28,50 @@ left to the user to decide whether the data they unpickle is from
 a trustworthy source.
 
 Dill is part of pathos, a python framework for heterogeneous computing.
-Dill is in active development, so any user feedback, bug reports, comments,
-or suggestions are highly appreciated.  A list of known issues is maintained
-at http://trac.mystic.cacr.caltech.edu/project/pathos/query, with a public
-ticket list at https://github.com/uqfoundation/dill/issues.
+Dill is in the early development stages, and any user feedback is
+highly appreciated. Contact Mike McKerns [mmckerns at caltech dot edu]
+with comments, suggestions, and any bugs you may find.  A list of known
+issues is maintained at http://dev.danse.us/trac/pathos/query.
 
 
 Major Features
 ==============
 
-Dill can pickle the following standard types::
+Dill is capable of pickling the following standard types::
 
     - none, type, bool, int, long, float, complex, str, unicode,
     - tuple, list, dict, file, buffer, builtin,
     - both old and new style classes,
     - instances of old and new style classes,
-    - set, frozenset, array, functions, exceptions
-
-Dill can also pickle more 'exotic' standard types::
-
-    - functions with yields, nested functions, lambdas,
-    - cell, method, unboundmethod, module, code, methodwrapper,
+    - set, frozenset, array, lambda,
+    - standard functions, functions with yields, nested functions
+    - cell, method, unboundmethod, module, code,
     - dictproxy, methoddescriptor, getsetdescriptor, memberdescriptor,
     - wrapperdescriptor, xrange, slice,
     - notimplemented, ellipsis, quit
 
-Dill cannot yet pickle these standard types::
-
-    - frame, generator, traceback
-
 Dill also provides the capability to::
 
     - save and load python interpreter sessions
-    - save and extract the source code from functions and classes
-    - interactively diagnose pickling errors
 
 
 Current Release
 ===============
 
-This version is dill-0.2.3.
+The latest stable release version is dill-0.1a1. You can download it here.
+The latest stable version of dill is always available at:
 
-The latest stable version of dill is available from::
-
-    http://trac.mystic.cacr.caltech.edu/project/pathos
-
-or::
-
-    https://github.com/uqfoundation/dill/releases
-
-or also::
-
-    https://pypi.python.org/pypi/dill
-
-Dill is distributed under a 3-clause BSD license.
-
-    >>> import dill
-    >>> print (dill.license())
+    http://dev.danse.us/trac/pathos
 
 
-Development Version 
+Development Release
 ===================
 
-You can get the latest development version with all the shiny new features at::
+If you like living on the edge, and don't mind the promise
+of a little instability, you can get the latest development
+release with all the shiny new features at:
 
-    https://github.com/uqfoundation
-
-Feel free to fork the github mirror of our svn trunk.  If you have a new
-contribution, please submit a pull request.
+    http://dev.danse.us/packages.
 
 
 Installation
@@ -108,17 +81,18 @@ Dill is packaged to install from source, so you must
 download the tarball, unzip, and run the installer::
 
     [download]
-    $ tar -xvzf dill-0.2.3.tgz
-    $ cd dill-0.2.3
+    $ tar -xvzf dill-0.2a.dev.tgz
+    $ cd dill-0.2a.dev
     $ python setup py build
     $ python setup py install
 
 You will be warned of any missing dependencies and/or settings
 after you run the "build" step above. 
 
-Alternately, dill can be installed with pip or easy_install::
+Alternately, dill can be installed with easy_install::
 
-    $ pip install dill
+    [download]
+    $ easy_install -f . dill
 
 
 Requirements
@@ -126,39 +100,39 @@ Requirements
 
 Dill requires::
 
-    - python2, version >= 2.5  *or*  python3, version >= 3.1
+    - python, version >= 2.5, version < 3.0
 
 Optional requirements::
 
     - setuptools, version >= 0.6
-    - objgraph, version >= 1.7.2
 
 
-More Information
-================
+Usage Notes
+===========
 
-Probably the best way to get started is to look at the tests that are
-provided within dill. See `dill.tests` for a set of scripts that demonstrate
-dill's ability to serialize different python objects.  Since dill conforms
-to the 'pickle' interface, the examples and documentation at
-http://docs.python.org/library/pickle.html also apply to dill if one will
-`import dill as pickle`. The source code is also generally well
-documented, so further questions may be resolved by inspecting the code
-itself.  Please also feel free to submit a ticket on github, or ask a
-question on stackoverflow (@Mike McKerns).
+Probably the best way to get started is to look at the tests
+that are provide within dill. See `dill.tests` for a set of scripts
+that test dill's ability to serialize different python objects.
+Since dill conforms to the 'pickle' interface, the examples and
+documentation at http://docs.python.org/library/pickle.html also
+apply to dill if one will `import dill as pickle`.
 
-Dill is an active research tool. There are a growing number of publications
-and presentations that discuss real-world examples and new features of dill
-in greater detail than presented in the user's guide.  If you would like to
-share how you use dill in your work, please post a link or send an email
-(to mmckerns at caltech dot edu).
+
+License
+=======
+
+Dill is distributed under a modified BSD license.
+
+    >>> import dill
+    >>> print dill.license()
 
 
 Citation
 ========
 
-If you use dill to do research that leads to publication, we ask that you
-acknowledge use of dill by citing the following in your publication::
+If you use dill to do research that leads to publication,
+we ask that you acknowledge use of dill by citing the
+following in your publication::
 
     M.M. McKerns, L. Strand, T. Sullivan, A. Fang, M.A.G. Aivazis,
     "Building a framework for predictive science", Proceedings of
@@ -167,10 +141,13 @@ acknowledge use of dill by citing the following in your publication::
 
     Michael McKerns and Michael Aivazis,
     "pathos: a framework for heterogeneous computing", 2010- ;
-    http://trac.mystic.cacr.caltech.edu/project/pathos
+    http://dev.danse.us/trac/pathos
 
-Please see http://trac.mystic.cacr.caltech.edu/project/pathos or
-http://arxiv.org/pdf/1202.1056 for further information.
+
+More Information
+================
+
+Please see http://dev.danse.us/trac/pathos or http://arxiv.org/pdf/1202.1056 for further information.
 
 '''
 license = '''This software is part of the open-source mystic project at the California
@@ -206,6 +183,6 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Copyright (c) 2015 California Institute of Technology. All rights reserved.
+Copyright (c) 2013 California Institute of Technology. All rights reserved.
 
 '''

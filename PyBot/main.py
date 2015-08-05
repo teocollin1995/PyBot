@@ -129,7 +129,8 @@ def wh():
             group_chat.group_chat = True
             group_chat.chat_id = chat_id
             temp = code.InteractiveConsole()
-            group_chat.console = dill.dumps(temp)
+            temp2 = = dill.dumps(temp)
+            #group_chat.console 
             group_chat.members = [Member(name=fr,pymode=False)]
             group_chat.key.id()
             group_chat.push()

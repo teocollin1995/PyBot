@@ -11,7 +11,10 @@ from StringIO import StringIO
 import sys
 from contextlib import contextmanager
 import requests as req
-import dill
+try:
+    import dill
+except IOError:
+    logging.info("grr dill")
 TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 document = """

@@ -202,6 +202,13 @@ def wh():
     logging.info("text:")
     logging.info(text)
 
+       @ndb.transactional
+    def in_pymode():
+        chat = ChatInfo.get_by_id(chat_id)
+        for index,b in enumerate(chat.members):
+            if b.name == fr:
+                return b.pymode
+
     #Process text to check for commands
 
     if text[0] == '/': #it is a command
@@ -222,12 +229,7 @@ def wh():
             resp = Response(r, status=200) 
             return resp    
         #at this point, if they are not in pymode, we should be discarding all input
-        @ndb.transactional
-        def in_pymode():
-            chat = ChatInfo.get_by_id(chat_id)
-            for index,b in enumerate(chat.members):
-                 if b.name == fr:
-                     return b.pymode
+     
         elif not in_pymode():
             logging.info("Discarded input because in pymode")
             resp = Response(r, status=200) 

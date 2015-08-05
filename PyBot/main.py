@@ -293,31 +293,32 @@ def wh():
             py = in_pymode()
             give_response(chat_id, "You are in pymode: {}".format(str(py)))
         #at this point, if they are not in pymode, we should be discarding all input
+    else:
 
 
-    if not in_pymode():
+        if not in_pymode():
             logging.info("Discarded input because in pymode")
             resp = Response(r, status=200) 
             return resp  
 
-    else:
-        logging.info("Checking for illegal inputs")
-        #Okay, they probably want us to process a command
-        #let's make sure it isn't a dangerous one
-        if 'import os' in text:
-            give_response(chat_id, "Ass!")
-        elif 'sys.' in text:
-            give_response(chat_id, "Ass!")
-        elif 'from os' in text:
-            give_response(chat_id, "Ass!")
-        elif 'from sys' in text:
-            give_response(chat_id, "Ass!")
-        elif 'import sys' in text:
-            give_response(chat_id, "Ass!")
         else:
-            logging.info("Entering transactional to process command")
-            #Okay, let's do this
-            process_command(text)
+            logging.info("Checking for illegal inputs")
+            #Okay, they probably want us to process a command
+            #let's make sure it isn't a dangerous one
+            if 'import os' in text:
+                give_response(chat_id, "Ass!")
+            elif 'sys.' in text:
+                give_response(chat_id, "Ass!")
+            elif 'from os' in text:
+                give_response(chat_id, "Ass!")
+            elif 'from sys' in text:
+                give_response(chat_id, "Ass!")
+            elif 'import sys' in text:
+                give_response(chat_id, "Ass!")
+            else:
+                logging.info("Entering transactional to process command")
+                #Okay, let's do this
+                process_command(text)
             
         
     resp = Response(r, status=200) #say that something happened

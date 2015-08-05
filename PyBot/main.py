@@ -157,16 +157,16 @@ def wh():
         for index,b in enumerate(chat.members):
             if b.name == fr:
                 return b.pymode
-     @ndb.transactional
-     def toggle_pymode():
-         chat = ChatInfo.get_by_id(chat_id)
-         
-         for index,b in enumerate(chat.members):
-             if b.name == fr:
-                 logging.info("toggling pymode of {}".format(fr))
-                 chat.members[index].pymode = not chat.members[index].pymode 
-                 resp = Response(r, status=200) #say that something happened
-                 return resp
+    @ndb.transactional
+    def toggle_pymode():
+        chat = ChatInfo.get_by_id(chat_id)
+        
+        for index,b in enumerate(chat.members):
+            if b.name == fr:
+                logging.info("toggling pymode of {}".format(fr))
+                chat.members[index].pymode = not chat.members[index].pymode 
+                resp = Response(r, status=200) #say that something happened
+                return resp
 
     #now we define the command processing function
     @ndb.transactional
@@ -197,6 +197,12 @@ def wh():
         chat.console = dill.dumps(console)
         chat.put()
         return 
+    @ndb.transactional
+    def clear_console():
+        chat = ChatInfo.get_by_id(chat_id)
+        temp = code.InteractiveConsole()
+        chat.console = dill.dumps(temp)
+        chat.put()
         
     #things that are variable in the mssage
     #Atext will remain none if it is a group message
@@ -274,12 +280,6 @@ def wh():
         
             
         elif text == '/clear':
-            @ndb.transactional
-            def clear_console():
-                chat = ChatInfo.get_by_id(chat_id)
-                temp = code.InteractiveConsole()
-                chat.console = dill.dumps(temp)
-                chat.put()
             clear_console()
         elif text == '/e':
             process_command('\n')

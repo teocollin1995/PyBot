@@ -11,10 +11,11 @@ from StringIO import StringIO
 import sys
 from contextlib import contextmanager
 import requests as req
-try:
-    import dill
-except IOError:
-    logging.info("grr dill")
+if os.environ.get('SERVER_SOFTWARE','').startswith('Dev'):
+    from google.appengine.tools.dev_appserver import FakeFilex
+    FakeFile.ALLOWED_MODES = frozenset(['a','r', 'w', 'rb', 'U', 'rU'])
+import dill
+
 TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 document = """

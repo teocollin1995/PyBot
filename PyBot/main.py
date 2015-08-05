@@ -175,6 +175,7 @@ def wh():
     #now we define the command processing function
     @ndb.transactional
     def process_command(cmd):
+        logging.info("starting to process command")
         f = StringIO()
         g = StringIO()
         executed = None
@@ -201,6 +202,7 @@ def wh():
         chat.console = dill.dumps(console)
         chat.put()
         return 
+
     @ndb.transactional
     def clear_console():
         chat = ChatInfo.get_by_id(chat_id)
@@ -291,6 +293,7 @@ def wh():
         elif text == '/e':
             process_command('\n')
         else:
+            logging.info("Checking for illegal inputs")
             #Okay, they probably want us to process a command
             #let's make sure it isn't a dangerous one
             if 'import os' in text:
@@ -304,6 +307,7 @@ def wh():
             elif 'import sys' in text:
                 give_response(chat_id, "Ass!")
             else:
+                logging.info("Entering transactional to process command")
                 #Okay, let's do this
                 process_command(text)
             

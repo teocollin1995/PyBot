@@ -166,10 +166,11 @@ def wh():
         
         for index,b in enumerate(chat.members):
             if b.name == fr:
-                logging.info("toggling pymode of {}".format(fr))
+                
                 chat.members[index].pymode = not chat.members[index].pymode 
-                resp = Response(r, status=200) #say that something happened
-                return resp
+                logging.info("toggling pymode of {} to {}".format(fr, str(chat.members[index].pymode)))
+                value = chat.members[index].pymode
+                return value
 
     #now we define the command processing function
     @ndb.transactional
@@ -269,7 +270,8 @@ def wh():
 
     if text[0] == '/': #it is a command
         if text == '/py': #toggle py mode
-            toggle_pymode()
+            ret = toggle_pymode()
+            give_response(chat_id, "toggled python mode to {}".format(str(ret)))
         elif text == '/start' or text == '/help' or text == '/commands':
             give_response(chat_id,document)
             resp = Response(r, status=200) 

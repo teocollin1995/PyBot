@@ -202,9 +202,99 @@ def wh():
     logging.info("text:")
     logging.info(text)
 
+    #Process text to check for commands
 
+    if text[0] == '/': #it is a command
+        if text == '/py': #toggle py mode
+            @ndb.transactional
+            def toggle_pymode():
+                chat = ChatInfo.get_by_id(chat_id)
+                
+                for index,b in enumerate(chat.members):
+                    if b.name == fr:
+                        logging.info("toggling pymode of {}".format(fr))
+                        chat.members[index].pymode = not chat.members[index].pymode 
+                resp = Response(r, status=200) #say that something happened
+                return resp
+            toggle_pymode()
+        elif text == '/start' or text == '/help' or text == '/commands':
+            give_response(chat_id,document)
+            resp = Response(r, status=200) 
+            return resp    
+        #at this point, if they are not in pymode, we should be discarding all input
+        @ndb.transactional
+        def in_pymode():
+            chat = ChatInfo.get_by_id(chat_id)
+             for index,b in enumerate(chat.members):
+                 if b.name == fr:
+                     return b.pymode
+        elif not in_pymode():
+            logging.info("Discarded input because in pymode")
+            resp = Response(r, status=200) 
+            return resp  
+  
+        #now we define the command processing function
+        @ndb.transactional
+        def process_command(cmd):
+            f = StringIO()
+            g = StringIO()
+            executed = None
+            chat = ChatInfo.get_by_id(chat_id)
+            console = dill.loads(chat.console) #unpickle our console
+                        
+            
+            with redirect_stdout(f):
+                with redirect_stderr(g):
+                    executed = console.push(cmd) #run commands with our console
+                    logging.info("Executed command with result: {}".format(str(executed)))
+                    
+
+            if executed == False:
+                cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
+                logging.info("cmd result:")
+                logging.info(cmd_res)
+                console.resetbuffer()
+                give_response(chat_id, cmd_res);
+            else:
+                logging.info("Waiting for further input")
+                give_response(chat_id, "Processed command:\n{}".format(cmd))
+            
+            chat.console = dill.dumps(console)
+            chat.put()
+        
+            
+        elif text == '/clear':
+            @ndb.transactional
+            def clear_console():
+                chat = ChatInfo.get_by_id(chat_id)
+                temp = code.InteractiveConsole()
+                chat.console = dill.dumps(temp)
+                chat.put()
+            clear_console()
+        elif text == '/e':
+            process_command('\n')
+        else:
+            #Okay, they probably want us to process a command
+            #let's make sure it isn't a dangerous one
+            if 'import os' in text:
+                give_response(chat_id, "Ass!")
+            elif 'sys.' in text:
+                give_response(chat_id, "Ass!")
+            elif 'from os' in text:
+                give_response(chat_id, "Ass!")
+            elif 'from sys' in text:
+                give_response(chat_id, "Ass!")
+            elif 'import sys' in text:
+                give_response(chat_id, "Ass!")
+            else:
+                #Okay, let's do this
+                process_command(text)
+            
+        
     resp = Response(r, status=200) #say that something happened
     return resp    
+
+    
     #ensure that if we pass this point, a chat object exists
 gerr = """ if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = ChatInfo(chat_id)

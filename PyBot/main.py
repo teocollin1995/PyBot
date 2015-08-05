@@ -265,11 +265,16 @@ def wh():
     #this is sloppy, fix it - generalize
     logging.info("text:")
     logging.info(text)
-
+    if text == "" or text == None:
+        give_response(chat_id, "Messages require actual content")
+        resp = Response(r, status=200)
+        return resp
+        
+        
 
 
     #Process text to check for commands
-
+    
     if text[0] == '/': #it is a command
         if text == '/py': #toggle py mode
             ret = toggle_pymode()

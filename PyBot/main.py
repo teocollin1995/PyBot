@@ -228,10 +228,10 @@ def wh():
             for index,b in enumerate(chat.members):
                  if b.name == fr:
                      return b.pymode
-            elif not in_pymode():
-                logging.info("Discarded input because in pymode")
-                resp = Response(r, status=200) 
-                return resp  
+        elif not in_pymode():
+            logging.info("Discarded input because in pymode")
+            resp = Response(r, status=200) 
+            return resp  
   
         #now we define the command processing function
         @ndb.transactional

@@ -202,7 +202,7 @@ def wh():
     logging.info("text:")
     logging.info(text)
 
-       @ndb.transactional
+    @ndb.transactional
     def in_pymode():
         chat = ChatInfo.get_by_id(chat_id)
         for index,b in enumerate(chat.members):

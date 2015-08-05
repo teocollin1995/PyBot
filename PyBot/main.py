@@ -218,10 +218,10 @@ gerr = """ if chat_id not in global_code_dict.keys():
     elif 'import sys' in text:
         give_response(chat_id, "Ass!")
     else: # make this into a function
-        process_command(text) #finally, do something
+        process_command(text) #finally, do something"""
 
     resp = Response(r, status=200) #say that something happened
-    return resp"""
+    return resp
         
     
 

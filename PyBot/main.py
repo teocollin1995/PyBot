@@ -32,7 +32,7 @@ class Member(ndb.Model):
 class ChatInfo(ndb.Model):
     chat_id = ndb.StringProperty() #This will be our key
     group_chat = ndb.BooleanProperty()
-    console = ndb.StringProperty()
+    console = ndb.PickleProperty()
     members = ndb.StructuredProperty(Member, repeated=True)
 
 
@@ -129,7 +129,7 @@ def wh():
             group_chat.group_chat = True
             group_chat.chat_id = chat_id
             temp = code.InteractiveConsole()
-            group_chat.console = str(dill.dumps(temp))
+            group_chat.console = dill.dumps(temp)
             group_chat.members = [Member(name=fr,pymode=False)]
             group_chat.key.id()
             group_chat.push()

@@ -86,7 +86,22 @@ def wh():
     
     message = body['message']
     from_section = message.get('from')
-    fr = from_section["username"] + from_section["last_name"] + from_section["first_name"]
+    try:
+        user_name = from_section["username"]
+    except:
+        user_name = ""
+    try:
+        last_name = from_section["last_name"]
+    except:
+        last_name = ""
+
+    try:
+        first_name = from_section["first_name"]
+    except:
+        first_name = ""
+    
+        
+    fr =  user_name + last_name + first_name
     chat = message['chat']
     chat_id = str(chat['id'])
     message_id = message.get('message_id')

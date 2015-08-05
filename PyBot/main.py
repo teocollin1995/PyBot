@@ -287,8 +287,13 @@ def wh():
             clear_console()
         elif text == '/e':
             process_command('\n')
+        elif text == '/mypy':
+            py = in_pymode()
+            give_response(chat_id, "You are in pymode: {}".format(str(py)))
         #at this point, if they are not in pymode, we should be discarding all input
-    elif not in_pymode():
+
+
+    if not in_pymode():
             logging.info("Discarded input because in pymode")
             resp = Response(r, status=200) 
             return resp  

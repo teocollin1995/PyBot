@@ -116,7 +116,7 @@ def wh():
             'disable_web_page_preview': 'true',
             'reply_to_message_id': str(message_id),
         })).read()
-    
+        
     #things that are variable in the mssage
     #Atext will remain none if it is a group message
     atext = None
@@ -147,7 +147,10 @@ def wh():
                 give_response(chat_id, "Action not allowed, ass")
                 resp = Response(r, status=200)
                 return resp
-    
+
+
+    resp = Response(r, status=200) #say that something happened
+    return resp    
     #ensure that if we pass this point, a chat object exists
 gerr = """ if chat_id not in global_code_dict.keys():
         global_code_dict[chat_id] = ChatInfo(chat_id)
@@ -235,8 +238,7 @@ gerr = """ if chat_id not in global_code_dict.keys():
     else: # make this into a function
         process_command(text) #finally, do something"""
 
-    resp = Response(r, status=200) #say that something happened
-    return resp
+
         
     
 

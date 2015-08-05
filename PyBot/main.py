@@ -168,7 +168,9 @@ def wh():
             if b.name == fr:
                 old = chat.members[index].pymode 
                 chat.members[index].pymode = not old
+                chat.put()
                 value = chat.members[index].pymode
+                
                 logging.info("toggling pymode of {} from {} to {}".format(fr,old, value))
                 return value
 

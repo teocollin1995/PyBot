@@ -281,7 +281,7 @@ def wh():
             text = text[8:]
             override_pymode = True
         elif text[0:7] == '/pylink':
-            link = text[6:]
+            link = text[8:]
             if 'pasebin' not in link:
                 logging.warn("someone attempted to send invalid link")
                 give_response(chat_id, "Invalid link")

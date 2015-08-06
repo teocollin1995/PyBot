@@ -300,6 +300,7 @@ def wh():
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
                 newlink = 'https://gist.githubusercontent.com' + [x for x in links if 'Raw' in x.text][0].get('href')
+                logging.info("Newlink is: {}".format(newlink))
             except IndexError:
                 logging.warn("Error fiding raw")
                 give_response(chat_id, "Invalid link")

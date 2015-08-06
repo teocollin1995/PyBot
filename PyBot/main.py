@@ -294,8 +294,8 @@ def wh():
                 give_response(chat_id, "Invalid link or connection issue")
                 resp = Response(r, status=200)
                 return resp
-            logging.info(paste)
-            soup = BeautifulSoup(paste)
+            logging.info(paste.read())
+            soup = BeautifulSoup(paste.read())
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
                 newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')

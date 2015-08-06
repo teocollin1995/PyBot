@@ -293,6 +293,7 @@ def wh():
                 give_response(chat_id, "Invalid link or connection issue")
                 resp = Response(r, status=200)
                 return resp
+            logging.info(paste.text)
             soup = BeautifulSoup(paste.text)
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:

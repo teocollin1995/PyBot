@@ -294,7 +294,7 @@ def wh():
                 resp = Response(r, status=200)
                 return resp
             soup = BeautifulSoup(paste.text)
-            logging.info("soup:\n:{}".format(soup.prettify()))
+            logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
                 newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')
             except IndexError:

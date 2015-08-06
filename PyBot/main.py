@@ -297,7 +297,7 @@ def wh():
             newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')
             paste2 = req.get(newlink)
             if not paste2:
-                logging.warn("someone attempted to send invalid link")
+                logging.warn("someone attempted to send invalid link or a link not to raw")
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
                 return resp

@@ -280,7 +280,7 @@ def wh():
         if text[0:7] == '/python':
             text = text[8:]
             override_pymode = True
-        elif text[0:6] == '/pylink':
+        elif text[0:7] == '/pylink':
             link = text[6:]
             if 'pasebin' not in link:
                 logging.warn("someone attempted to send invalid link")

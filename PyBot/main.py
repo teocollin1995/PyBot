@@ -313,7 +313,7 @@ def wh():
                 return resp
             text = paste.text.replace('\r','\n')
             override_pymode = True
-            logging.info("py link text\n:{}".format(text))
+            logging.info("py link text\n:{}".format(text.encode('utf-8')))
             
             
     #Process text to check for minor commands that don't transform the text

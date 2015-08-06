@@ -195,7 +195,7 @@ def wh():
                 logging.info("Executed command with result: {}".format(str(executed)))
                 
                 
-        if executed == False:
+        if executed == False or runsource == True:
             cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
             logging.info("cmd result:")
             logging.info(cmd_res)

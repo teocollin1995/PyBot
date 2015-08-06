@@ -363,7 +363,7 @@ def wh():
             else:
                 logging.info("Entering transactional to process command")
                 #Okay, let's do this
-                process_command(text)
+                process_command(text, runsource = override_pymode)
             
         
     resp = Response(r, status=200) #say that something happened

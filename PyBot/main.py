@@ -22,7 +22,32 @@ import dill
 TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 document = """
-TBA
+python2bot or PyBot for short is a bot that simulates a python (2.7.4) interpreter. It gives you access to an almost full featured python interpreter. It is for individual and group use. Groups share one interpreter! You can turn input on and off. You can also give it gist links and send their contents to the interpreter.
+
+Commands:
+/start - gives you this message
+/clear - resets the python interpreter
+/mypy - tells you if you are in python mode or not
+/py - toggles python mode - if python mode is enable (TRUE) then each message that you send will be treated as python code being sent to an interpreter. In this mode, you can send multi-line commands as one message with \\ns and \\t as needed or you can send each line of a multi-line command as a seperate message. Either way, you need to terminate the multi-line command with /e 
+/e - terminates a multi-line input. 
+/python COMMAND - runs COMMAND throught the interpreter even if python mode is disable
+/pylink GISTPAGE - finds the RAW of a gist page and sends it to the interpreter
+
+Multi-line commands:
+Multi-line commands are a bit tricky. First, telegram has no TAB functionality. Moreover, telegram does not even support "special" characters like \\t or \\n so support for them had to be added in the bot's code. Consquently, you must manually newline and tab your code using \\t and \\n. Second, in an interpreter, you have to hit RETURN to end a multi-line input. To emulate this in telegram, you send '/e' after you have finished sending the messagges that made up your multi-line command. Altenratively, /python assumes all commands are multi-line and requires no /e.
+
+Pylink:
+Pylink is rather experimental and could break easily if gist.github changes something. Simply supply it with the home page for some gist e.g. https://gist.github.com/teocollin1995/298b9f51df4fd963eeec and it will run all the python on that page
+
+Disallowed libraries:
+OS and Sys are disabled
+
+Python Libraries used by this bot:
+Dill, Code, Requests, urllib, logging, json, bs4, StringIO, flask, google, contextlib, sys, os
+
+Contact:
+github.com/teocollin1995
+
 """
 
 
@@ -282,6 +307,8 @@ def wh():
     if text[0] == '/':
         if text[0:7] == '/python':
             text = text[8:]
+            override_pymode = True
+        if text[0:4] == '/b ':
             override_pymode = True
         elif text[0:7] == '/pylink':
             link = text[8:]

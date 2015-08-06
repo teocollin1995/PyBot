@@ -294,7 +294,13 @@ def wh():
                 resp = Response(r, status=200)
                 return resp
             soup = BeautifulSoup(paste.text)
-            newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')
+            try:
+                newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')
+            except IndexError:
+                logging.warn("Error fiding raw")
+                give_response(chat_id, "Invalid link")
+                resp = Response(r, status=200)
+                return resp
             paste2 = req.get(newlink)
             if not paste2:
                 logging.warn("someone attempted to send invalid link or a link not to raw")

@@ -177,7 +177,7 @@ def wh():
 
     #now we define the command processing function
     @ndb.transactional
-    def process_command(cmd):
+    def process_command(cmd, runsource=False):
         logging.info("starting to process command")
         f = StringIO()
         g = StringIO()
@@ -188,7 +188,10 @@ def wh():
         
         with redirect_stdout(f):
             with redirect_stderr(g):
-                executed = console.push(cmd) #run commands with our console
+                if not runsource:
+                    executed = console.push(cmd) #run commands with our console
+                else:
+                    executed = console.runsource(cmd) #if we bypass and send a whole file
                 logging.info("Executed command with result: {}".format(str(executed)))
                 
                 

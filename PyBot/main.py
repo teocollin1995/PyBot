@@ -312,7 +312,7 @@ def wh():
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
                 return resp
-            text = paste.text.replace('\r','\n')
+            text = paste2.text.replace('\r','\n')
             override_pymode = True
             logging.info("py link text\n:{}".format(text.encode('utf-8')))
             

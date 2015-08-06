@@ -278,7 +278,7 @@ def wh():
     #commands that transform the text
     if text[0] == '/':
         if text[0:7] == '/python':
-            text = text[7:]
+            text = text[8:]
             override_pymode = True
         elif text[0:6] == '/pylink':
             link = text[6:]
@@ -303,6 +303,7 @@ def wh():
                 return resp
             text = paste.text.replace('\r','\n')
             override_pymode = True
+            logging.info("py link text\n:{}".format(text))
             
             
     #Process text to check for minor commands that don't transform the text

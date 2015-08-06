@@ -287,14 +287,15 @@ def wh():
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
                 return resp
-            paste = req.get(link)
+            paste = urllib2.urlopen(link)
+            #paste = req.get(link)
             if not paste:
                 logging.warn("Possible server to pasterpin connection issue")
                 give_response(chat_id, "Invalid link or connection issue")
                 resp = Response(r, status=200)
                 return resp
-            logging.info(paste.text)
-            soup = BeautifulSoup(paste.text)
+            logging.info(paste)
+            soup = BeautifulSoup(paste)
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
                 newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')

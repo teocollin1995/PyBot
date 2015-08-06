@@ -272,11 +272,14 @@ def wh():
         give_response(chat_id, "Messages require actual content")
         resp = Response(r, status=200)
         return resp
-        
+    #flag to be set if we want to process text even if pymode is false
+    override_pymode = False
+    
     #commands that transform the text
     if text[0] == '/':
         if text[0:7] == '/python':
             text = text[7:]
+            override_pymode = True
         elif text[0:6] == '/pylink':
             link = text[6:]
             if 'pasebin' not in link:
@@ -299,6 +302,7 @@ def wh():
                 resp = Response(r, status=200)
                 return resp
             text = paste.text.replace('\r','\n')
+            override_pymode = True
             
             
     #Process text to check for minor commands that don't transform the text
@@ -322,7 +326,7 @@ def wh():
     else:
 
 
-        if not in_pymode():
+        if not in_pymode() and not override_pymode:
             logging.info("Discarded input because in pymode")
             resp = Response(r, status=200) 
             return resp  

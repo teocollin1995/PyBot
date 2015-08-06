@@ -12,6 +12,7 @@ import sys
 from contextlib import contextmanager
 import requests as req
 import os
+from bs4 import BeautifulSoup
 os.devnull =  os.path.devnull
 if os.environ.get('SERVER_SOFTWARE','').startswith('Dev'):
     from google.appengine.tools.dev_appserver import FakeFilex
@@ -272,10 +273,35 @@ def wh():
         resp = Response(r, status=200)
         return resp
         
-        
-
-
-    #Process text to check for commands
+    #commands that transform the text
+    if text[0] == '/':
+        if text[0:7] == '/python':
+            text = text[7:]
+        elif text[0:6] == '/pylink':
+            link = text[6:]
+            if 'pasebin' not in link:
+                logging.warn("someone attempted to send invalid link")
+                give_response(chat_id, "Invalid link")
+                resp = Response(r, status=200)
+                return resp
+            paste = req.get(link)
+            if not paste:
+                logging.warn("Possible server to pasterpin connection issue")
+                give_response(chat_id, "Invalid link or connection issue")
+                resp = Response(r, status=200)
+                return resp
+            soup = BeautifulSoup(paste.text)
+            newlink = 'https://pastebin.com' + [x for x in soup.find_all('a') if 'raw' in x.get('href')][0].get('href')
+            paste2 = req.get(newlink)
+            if not paste2:
+                logging.warn("someone attempted to send invalid link")
+                give_response(chat_id, "Invalid link")
+                resp = Response(r, status=200)
+                return resp
+            text = paste.text.replace('\r','\n')
+            
+            
+    #Process text to check for minor commands that don't transform the text
     
     if text[0] == '/': #it is a command
         if text == '/py': #toggle py mode

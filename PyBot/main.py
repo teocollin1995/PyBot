@@ -191,7 +191,7 @@ def wh():
                 if not runsource:
                     executed = console.push(cmd) #run commands with our console
                 else:
-                    executed = console.runsource(cmd) #if we bypass and send a whole file
+                    executed = console.runcode(cmd) #if we bypass and send a whole file
                 logging.info("Executed command with result: {}".format(str(executed)))
                 
                 

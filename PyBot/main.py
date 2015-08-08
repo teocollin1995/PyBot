@@ -480,8 +480,13 @@ def wh():
             else:
                 logging.info("Entering transactional to process command")
                 #Okay, let's do this
-                process_command(text, runsource = override_pymode)
-            
+                try:
+                    #process_command(text, runsource = override_pymode)
+                    limit_time(MAX_EXEC_TIME, process_command, text, runsource = override_pymode)
+                except TimeoutError:
+                    logging.info("Command took too long and was killed")
+                    give_response(chat_id, "Max execution time exceded")
+
         
     resp = Response(r, status=200) #say that something happened
     return resp    

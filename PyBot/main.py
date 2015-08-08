@@ -4,7 +4,7 @@ import logging
 import urllib
 import urllib2
 from google.appengine.api import urlfetch
-from google.appengine.ext import ndb
+from google.appengine.ext import ndb, memcache
 from flask import Flask, jsonify, request, Response
 import code
 from StringIO import StringIO
@@ -12,6 +12,7 @@ import sys
 from contextlib import contextmanager
 import requests as req
 import os
+import time
 from bs4 import BeautifulSoup
 os.devnull =  os.path.devnull
 if os.environ.get('SERVER_SOFTWARE','').startswith('Dev'):
@@ -43,12 +44,56 @@ Disallowed libraries:
 OS and Sys are disabled
 
 Python Libraries used by this bot:
-Dill, Code, Requests, urllib, logging, json, bs4, StringIO, flask, google, contextlib, sys, os
+Dill, Code, Requests, Urllib, Logging, Json, bs4, StringIO, Flask, google, contextlib, sys, os
 
 Contact:
 github.com/teocollin1995
 
 """
+#all times in 
+MAX_EXEC_TIME = 15
+KILL_TIME_ALLOWANCE = 5
+LOCK_LIFE = MAX_EXEC_TIME + KILL_TIME_ALLOWANCE
+CACHE_REFRESH_WAIT = .5
+
+class Lock(object):
+    def __init__(self, key):
+        self.key = key
+    def acquire(self, time_limit = False):
+        if time_limit:
+            expriration_time = time.time() + LOCK_LIFE #For if I wanted to limit the lock life for some reason
+        
+            while not memcache.add(self.key,"TRUE", time = expriration_time):
+                time.sleep(CACHE_REFRESH_WAIT)
+        else:
+            while not memcache.add(self.key,"TRUE"):
+                time.sleep(CACHE_REFRESH_WAIT)
+
+
+    def release(self):
+        memcache.delete(self.key)
+
+class TimeoutError(Exception):
+    "In case execution of user commands excedes MAX_EXEC_TIME"
+
+
+def limit_time(timeout, code, *args, **kwargs):
+    
+    def tracer(frame, event, arg, start=time.time()):
+        "Helper."
+        now = time.time()
+        if now > start + MAX_EXEC_TIME:
+            raise TimeoutError(start, now)
+        
+        return tracer if event == "call" else None
+    
+    old_tracer = sys.gettrace()
+    try:
+        sys.settrace(tracer)
+        code(*args, **kwargs)
+    finally:
+        sys.settrace(old_tracer)
+    
 
 
 class Member(ndb.Model):
@@ -63,8 +108,6 @@ class ChatInfo(ndb.Model):
 
 
 app = Flask(__name__)
-
-#global_code_dict = dict() #dict of chatInfos
 
 
 
@@ -93,9 +136,9 @@ def wh():
             sys.stdout = old_target # restore to the previous value
     @contextmanager
     def redirect_stderr(new_target):
-        old_target, sys.stderr = sys.stderr, new_target # replace sys.stdout
+        old_target, sys.stderr = sys.stderr, new_target # replace sys.stderr
         try:
-            yield new_target # run some code with the replaced stdout
+            yield new_target # run some code with the replaced stderr
         finally:
             sys.stderr = old_target # restore to the previous value
         
@@ -112,10 +155,13 @@ def wh():
     
     message = body['message']
     from_section = message.get('from')
+    #apparently, you don't have to have all three of these...
+    
     try:
         user_name = from_section["username"]
     except:
         user_name = ""
+    
     try:
         last_name = from_section["last_name"]
     except:
@@ -126,10 +172,11 @@ def wh():
     except:
         first_name = ""
     
-        
     fr =  user_name + last_name + first_name
     chat = message['chat']
     chat_id = str(chat['id'])
+    lock_key = chat_id + "lock"
+    lock = Lock(lock_key)
     message_id = message.get('message_id')
     date = message.get('date')
     
@@ -145,9 +192,16 @@ def wh():
             })).read()
         except:
             logging.warning("http error")
+    #we can also define all the functions that need to operate atomically on the database
+
+
 
     @ndb.transactional
     def create_new_user():
+        """
+        Check if a chat exists. If it a group chat, it will or something is wrong. If it is a group chat, make sure the user sending commands exists. 
+        If it is not a group chat, create the chat and the user.
+        """
         query = ChatInfo.get_by_id(chat_id)
         if query is not None:
             #at least the chat already exists
@@ -163,8 +217,7 @@ def wh():
                     temp.pymode = False
                     query.members.append(temp)
                     query.put()
-                    
-                    
+                                        
                 return
                     
         else:
@@ -180,14 +233,25 @@ def wh():
             group_chat.put()
             return 
     
+
+
     @ndb.transactional
     def in_pymode():
+        """
+        Check if the current user is in py mode
+        """
         chat = ChatInfo.get_by_id(chat_id)
         for index,b in enumerate(chat.members):
             if b.name == fr:
                 return b.pymode
+
+
+
     @ndb.transactional
     def toggle_pymode():
+        """
+        Toggle the current user's pymode status
+        """
         chat = ChatInfo.get_by_id(chat_id)
         
         for index,b in enumerate(chat.members):
@@ -200,14 +264,16 @@ def wh():
                 logging.info("toggling pymode of {} from {} to {}".format(fr,old, value))
                 return value
 
+
+
     #now we define the command processing function
     @ndb.transactional
     def process_command(cmd, runsource=False):
         logging.info("starting to process command")
-        f = StringIO()
+        f = StringIO() #fake files to redirect stdio/stderr into
         g = StringIO()
-        executed = None
-        chat = ChatInfo.get_by_id(chat_id)
+        executed = None #use to determine if more commands are required to finish this one
+        chat = ChatInfo.get_by_id(chat_id) 
         console = dill.loads(chat.console) #unpickle our console
         
         
@@ -221,32 +287,39 @@ def wh():
                 
                 
         if executed == False or runsource == True:
-            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
+            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\"" #later test if both are needed.
             logging.info("cmd result:")
             logging.info(cmd_res)
-            console.resetbuffer()
+            console.resetbuffer() #clean the buffer - I'm not sure this is needed because I do not fully understand the code buffer thing
             give_response(chat_id, cmd_res);
         else:
             logging.info("Waiting for further input")
             give_response(chat_id, "Processed command:\n{}".format(cmd))
             
-        chat.console = dill.dumps(console)
+        chat.console = dill.dumps(console) #put the console back
         chat.put()
-        return 
+        
+
+
 
     @ndb.transactional
     def clear_console():
+        """
+        Reset the current chat's console
+        """
         chat = ChatInfo.get_by_id(chat_id)
         temp = code.InteractiveConsole()
         chat.console = dill.dumps(temp)
         chat.put()
+
+
         
     #things that are variable in the mssage
     #Atext will remain none if it is a group message
     atext = None
     atext = message.get('text')
     if atext == None:
-        # it is a group message or something we don't like'
+        # it is a group message or something we don't like
         atext = message.get(u'new_chat_participant') 
         #These don't need to be transactional as there are specific message types for the creation and
         #destruction of groups
@@ -283,43 +356,41 @@ def wh():
         #this is a user message.
         #we need to find if there is a new user and create them if needed
         #since an individual user request can start in many ways, this needs to be atomic
-       
-
         create_new_user()
-
-    #if we get past this point, we should be sure that a chat exists and the user exists
+        #if we get past this point, we should be sure that a chat exists and the user exists
+    
     
     #deal with special chars:
     btext = atext.rstrip("\\n")
     ctext = string.replace(btext, "\\t", '\t')
     text = string.replace(ctext, "\\n", '\n')
-    #this is sloppy, fix it - generalize
+    #this is sloppy, fix it - generalize it - add more
     logging.info("text:")
     logging.info(text)
     if text == "" or text == None:
         give_response(chat_id, "Messages require actual content")
         resp = Response(r, status=200)
         return resp
-    #flag to be set if we want to process text even if pymode is false
+    #flag to be set if we want to process text even if pymode is not enabled by the user
     override_pymode = False
     
-    #commands that transform the text
+    #commands that transform the text/command are to be processed first
     if text[0] == '/':
         if text[0:7] == '/python':
             text = text[8:]
             override_pymode = True
-        if text[0:4] == '/b ':
+        if text[0:4] == '/b ': #experimental - not to be included in docs yet
             override_pymode = True
         elif text[0:7] == '/pylink':
             link = text[8:]
-            if 'gist.github' not in link:
+            if 'gist.github' not in link: #use regex later - simple test but might be easy to fool
                 logging.warn("someone attempted to send invalid link")
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
                 return resp
             
             paste = req.get(link)
-            if not paste:
+            if not paste: # test if not status 200
                 logging.warn("Possible server to pasterpin connection issue")
                 give_response(chat_id, "Invalid link or connection issue")
                 resp = Response(r, status=200)
@@ -329,9 +400,9 @@ def wh():
             links = soup.find_all('a')
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
-                newlink = 'https://gist.githubusercontent.com' + [x for x in links if 'Raw' in x.text][0].get('href')
+                newlink = 'https://gist.githubusercontent.com' + [x for x in links if 'Raw' in x.text][0].get('href') #finds the Raw page where the code is easy to get
                 logging.info("Newlink is: {}".format(newlink))
-            except IndexError:
+            except IndexError: #in case something goes wrong and no raw page is there
                 logging.warn("Error fiding raw")
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
@@ -377,6 +448,7 @@ def wh():
             logging.info("Checking for illegal inputs")
             #Okay, they probably want us to process a command
             #let's make sure it isn't a dangerous one
+            #please brainstorm more of these
             if 'import os' in text:
                 give_response(chat_id, "Ass!")
             elif 'sys.' in text:
@@ -395,93 +467,7 @@ def wh():
         
     resp = Response(r, status=200) #say that something happened
     return resp    
-
-    
-    #ensure that if we pass this point, a chat object exists
-gerr = """ if chat_id not in global_code_dict.keys():
-        global_code_dict[chat_id] = ChatInfo(chat_id)
-                
-    #ensure that if we pass this point, the user has been initalized
-    if not global_code_dict[chat_id].is_user(fr):
-        global_code_dict[chat_id].add_user(fr)
-        #allow user to start sending code immeditately if they are not starting in a group chat
-        if not global_code_dict[chat_id].group_chat:
-            global_code_dict[chat_id].change_user_usage(fr)
-
-    
-
-
-    
-    # we can now define process command
-    def process_command(cmd):
-        f = StringIO()
-        g = StringIO()
-        executed = None
-        with redirect_stdout(f):
-            with redirect_stderr(g):
-                executed = global_code_dict[chat_id].code.push(cmd)
-                logging.info("Executed command with result: {}".format(str(executed)))
-                
-
-        if executed == False:
-            cmd_res = "\"" + f.getvalue() + g.getvalue() + "\""
-            logging.info("cmd result:")
-            logging.info(cmd_res)
-            global_code_dict[chat_id].code.resetbuffer()
-            give_response(chat_id, cmd_res);
-        else:
-            logging.info("Waiting for further input")
-            give_response(chat_id, "Processed command:\n{}".format(cmd))
-            
         
-    #last bit of logic for deciding what to do with the text
-    pymod = global_code_dict[chat_id].python_mode(fr)
-    logging.info("python mode is {}".format(pymod))
-    if text[0] == '/':
-        #check if they want to toggle python mode
-        if text[0:3] == '/py':
-            global_code_dict[chat_id].change_user_usage(fr)
-            give_response(chat_id, "Toggled python input mode to {}".format(global_code_dict[chat_id].python_mode(fr)))
-            resp = Response(r, status=200)
-            return resp
-            #check if they are in python mode to start with
-        elif not pymod:
-            logging.info("Discarding input")
-            resp = Response(r, status=200) #discard if they are not in python mode
-            return resp
-        elif text == '/start': #give document
-            give_response(chat_id, document)
-        elif text == '/clear': #clear enviroment
-            global_code_dict[chat_id].clear()
-        elif text[0:2] == '/t': #depricated:
-            text = "\t" + text[2:]
-            logging.info("indent parsed")
-            process_command(text)
-        elif text == '/e': #finish a multiline input
-            executed = global_code_dict[chat_id].push('\n')
-            give_response(chat_id, "Terminated input: {}".format(str(executed)))
-            resp = Response(r, status=200)
-            return resp
-        else:
-            give_response(chat_id, "Action not allowed, ass!")
-    #assuming there are no commands, let's check for any imports that we might not like
-    elif 'import os' in text:
-        give_response(chat_id, "Ass!")
-    elif 'sys.' in text:
-        give_response(chat_id, "Ass!")
-    elif 'from os' in text:
-        give_response(chat_id, "Ass!")
-    elif 'from sys' in text:
-        give_response(chat_id, "Ass!")
-    elif 'import sys' in text:
-        give_response(chat_id, "Ass!")
-    else: # make this into a function
-        process_command(text) #finally, do something"""
-
-
-        
-    
-
     
     
     
@@ -493,10 +479,14 @@ def hello():
     return 'Hello World!'
 
 
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     """Return a custom 404 error."""
     return 'Sorry, Nothing at this URL.', 404
+
+
 
 
 @app.errorhandler(500)

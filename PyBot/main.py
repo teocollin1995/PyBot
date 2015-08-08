@@ -279,9 +279,9 @@ def wh():
         f = StringIO() #fake files to redirect stdio/stderr into
         g = StringIO()
         executed = None #use to determine if more commands are required to finish this one
-        lock.acquire()
+        lock.acquire(time_limit = True) #this could be dangerous
         chat = ChatInfo.get_by_id(chat_id) 
-        console = dill.loads(chat.console) #unpickle our console
+        console = dill.loads(chat.console) #unpickle our console - how does this scale???
         
         
         with redirect_stdout(f):
@@ -289,8 +289,15 @@ def wh():
                 if not runsource:
                     executed = console.push(cmd) #run commands with our console 
                     #!!! COVER EXIT - this one exception carries through!
+                    chat.console = dill.dumps(console) #put the console back
+                    chat.put()
+                    lock.release()
                 else:
                     executed = console.runcode(cmd) #if we bypass and send a whole file
+                    chat.console = dill.dumps(console) #put the console back
+                    chat.put()
+                    lock.release()
+
                 logging.info("Executed command with result: {}".format(str(executed)))
                 
                 
@@ -298,15 +305,13 @@ def wh():
             cmd_res = "\"" + f.getvalue() + g.getvalue() + "\"" #later test if both are needed.
             logging.info("cmd result:")
             logging.info(cmd_res)
-            console.resetbuffer() #clean the buffer - I'm not sure this is needed because I do not fully understand the code buffer thing
+            #console.resetbuffer() #clean the buffer - I'm not sure this is needed because I do not fully understand the code buffer thing
             give_response(chat_id, cmd_res);
         else:
             logging.info("Waiting for further input")
             give_response(chat_id, "Processed command:\n{}".format(cmd))
             
-        chat.console = dill.dumps(console) #put the console back
-        chat.put()
-        lock.release()
+        
         
 
 

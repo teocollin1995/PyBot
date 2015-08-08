@@ -196,12 +196,13 @@ def wh():
 
 
 
-    @ndb.transactional
+    
     def create_new_user():
         """
         Check if a chat exists. If it a group chat, it will or something is wrong. If it is a group chat, make sure the user sending commands exists. 
         If it is not a group chat, create the chat and the user.
         """
+        lock.acquire()
         query = ChatInfo.get_by_id(chat_id)
         if query is not None:
             #at least the chat already exists
@@ -217,9 +218,8 @@ def wh():
                     temp.pymode = False
                     query.members.append(temp)
                     query.put()
-                                        
-                return
                     
+                                        
         else:
             #There is no user chat and we need to create it
             group_chat = ChatInfo(id = chat_id)
@@ -231,27 +231,31 @@ def wh():
             group_chat.members = [Member(name=fr,pymode=False)]
             group_chat.key.id()
             group_chat.put()
-            return 
+        lock.release()
+        return
     
 
 
-    @ndb.transactional
     def in_pymode():
         """
         Check if the current user is in py mode
         """
+        lock.acquire()
         chat = ChatInfo.get_by_id(chat_id)
         for index,b in enumerate(chat.members):
             if b.name == fr:
+                lock.release()
                 return b.pymode
+        lock.release()
 
 
 
-    @ndb.transactional
+
     def toggle_pymode():
         """
         Toggle the current user's pymode status
         """
+        lock.acquire()
         chat = ChatInfo.get_by_id(chat_id)
         
         for index,b in enumerate(chat.members):
@@ -259,20 +263,23 @@ def wh():
                 old = chat.members[index].pymode 
                 chat.members[index].pymode = not old
                 chat.put()
+                lock.release()
                 value = chat.members[index].pymode
                 
                 logging.info("toggling pymode of {} from {} to {}".format(fr,old, value))
                 return value
+        lock.release()
 
 
 
     #now we define the command processing function
-    @ndb.transactional
+
     def process_command(cmd, runsource=False):
         logging.info("starting to process command")
         f = StringIO() #fake files to redirect stdio/stderr into
         g = StringIO()
         executed = None #use to determine if more commands are required to finish this one
+        lock.acquire()
         chat = ChatInfo.get_by_id(chat_id) 
         console = dill.loads(chat.console) #unpickle our console
         
@@ -280,7 +287,8 @@ def wh():
         with redirect_stdout(f):
             with redirect_stderr(g):
                 if not runsource:
-                    executed = console.push(cmd) #run commands with our console
+                    executed = console.push(cmd) #run commands with our console 
+                    #!!! COVER EXIT - this one exception carries through!
                 else:
                     executed = console.runcode(cmd) #if we bypass and send a whole file
                 logging.info("Executed command with result: {}".format(str(executed)))
@@ -298,19 +306,22 @@ def wh():
             
         chat.console = dill.dumps(console) #put the console back
         chat.put()
+        lock.release()
         
 
 
 
-    @ndb.transactional
+    
     def clear_console():
         """
         Reset the current chat's console
         """
+        lock.acquire()
         chat = ChatInfo.get_by_id(chat_id)
         temp = code.InteractiveConsole()
         chat.console = dill.dumps(temp)
         chat.put()
+        lock.release()
 
 
         
@@ -323,6 +334,7 @@ def wh():
         atext = message.get(u'new_chat_participant') 
         #These don't need to be transactional as there are specific message types for the creation and
         #destruction of groups
+        #But we might consider adding locks....
         if atext != None:
             group_chat = ChatInfo(id = chat_id)
             group_chat.group_chat = True
@@ -348,7 +360,8 @@ def wh():
                 return resp
             else:
                 logging.info("Included non-text content")
-                give_response(chat_id, "Action not allowed, ass")
+                if in_pymode():
+                    give_response(chat_id, "Action not allowed, ass")
                 resp = Response(r, status=200)
                 return resp
 
@@ -367,10 +380,7 @@ def wh():
     #this is sloppy, fix it - generalize it - add more
     logging.info("text:")
     logging.info(text)
-    if text == "" or text == None:
-        give_response(chat_id, "Messages require actual content")
-        resp = Response(r, status=200)
-        return resp
+
     #flag to be set if we want to process text even if pymode is not enabled by the user
     override_pymode = False
     
@@ -416,7 +426,15 @@ def wh():
             text = paste2.text.replace('\r','\n')
             override_pymode = True
             logging.info("py link text\n:{}".format(text.encode('utf-8')))
-            
+
+
+    #as that was the last point to change the test, how about if it actually says anything?
+    if text == "" or text == None:
+        give_response(chat_id, "Messages require actual content")
+        resp = Response(r, status=200)
+        return resp
+    
+        
             
     #Process text to check for minor commands that don't transform the text
     

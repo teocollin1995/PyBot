@@ -3,8 +3,8 @@ import json
 import logging
 import urllib
 import urllib2
-from google.appengine.api import urlfetch
-from google.appengine.ext import ndb, memcache
+from google.appengine.api import urlfetch, memcache
+from google.appengine.ext import ndb
 from flask import Flask, jsonify, request, Response
 import code
 from StringIO import StringIO

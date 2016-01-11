@@ -20,7 +20,7 @@ if os.environ.get('SERVER_SOFTWARE','').startswith('Dev'):
     FakeFile.ALLOWED_MODES = frozenset(['a','r', 'w', 'rb', 'U', 'rU'])
 import dill
 
-TOKEN= '50177117:AAEL3w8LlTI8bjoBIkC057at0jnZti75lcY'
+TOKEN= #insert here
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 document = """
 python2bot or PyBot for short is a bot that simulates a python (2.7.4) interpreter. It gives you access to an almost full featured python interpreter. It is for individual and group use. Groups share one interpreter! You can turn input on and off. You can also give it gist links and send their contents to the interpreter.

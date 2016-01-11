@@ -5,13 +5,13 @@ python2bot or PyBot for short is a telegram bot that simulates a python (2.7.4) 
 
 Commands:
 ---------------------
-/start - gives you this message
-/clear - resets the python interpreter
-/mypy - tells you if you are in python mode or not
-/py - toggles python mode - if python mode is enable (TRUE) then each message that you send will be treated as python code being sent to an interpreter. In this mode, you can send multi-line commands as one message with \\ns and \\t as needed or you can send each line of a multi-line command as a seperate message. Either way, you need to terminate the multi-line command with /e 
-/e - terminates a multi-line input. 
-/python COMMAND - runs COMMAND throught the interpreter even if python mode is disable
-/pylink GISTPAGE - finds the RAW of a gist page and sends it to the interpreter
+* /start - gives you this message
+* /clear - resets the python interpreter
+* /mypy - tells you if you are in python mode or not
+* /py - toggles python mode - if python mode is enable (TRUE) then each message that you send will be treated as python code being sent to an interpreter. In this mode, you can send multi-line commands as one message with \\ns and \\t as needed or you can send each line of a multi-line command as a seperate message. Either way, you need to terminate the multi-line command with /e 
+* /e - terminates a multi-line input. 
+* /python COMMAND - runs COMMAND throught the interpreter even if python mode is disable
+* /pylink GISTPAGE - finds the RAW of a gist page and sends it to the interpreter
 
 Multi-line commands:
 ---------------------

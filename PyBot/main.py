@@ -50,20 +50,25 @@ Contact:
 github.com/teocollin1995
 
 """
-#all times in 
+#all times in seconds
 MAX_EXEC_TIME = 15
 KILL_TIME_ALLOWANCE = 5
 LOCK_LIFE = MAX_EXEC_TIME + KILL_TIME_ALLOWANCE
 CACHE_REFRESH_WAIT = .5
 
 class Lock(object):
+    """
+    This is a memcached based lock. It works because memcache operations are atomic. 
+    """
     def __init__(self, key):
         self.key = key
     def acquire(self, time_limit = False):
         if time_limit:
             expriration_time = time.time() + LOCK_LIFE #For if I wanted to limit the lock life for some reason
         
-            while not memcache.add(self.key,"TRUE", time = expriration_time):
+            while not memcache.add(self.key,"TRUE", time = expriration_time): 
+                #try to add the key every CACHE_REFRESH_WAIT seconds
+                #if the key is added, then another operation cannot add the key without returning false.
                 time.sleep(CACHE_REFRESH_WAIT)
         else:
             while not memcache.add(self.key,"TRUE"):
@@ -73,14 +78,20 @@ class Lock(object):
     def release(self):
         memcache.delete(self.key)
 
+
 class TimeoutError(Exception):
+    """
+    It is very easy to insert some code into the console that takes a long time to run. I use the limit_time function to run the code under a time limit. This exception is to be raised only if the time limit, MAX_EXEC_TIME, for limit_time to execute some code is execded.
+    """
     "In case execution of user commands excedes MAX_EXEC_TIME"
 
 
 def limit_time(timeout, code, *args, **kwargs):
     
     def tracer(frame, event, arg, start=time.time()):
-        "Helper."
+        """
+        We use a tracer to keep track of how long code has been running for. 
+        It raises the timeout error in the event of this time exceding MAX_EXEC TIME  """
         now = time.time()
         if now > start + MAX_EXEC_TIME:
             raise TimeoutError(start, now)
@@ -93,18 +104,36 @@ def limit_time(timeout, code, *args, **kwargs):
         code(*args, **kwargs)
     finally:
         sys.settrace(old_tracer)
-    
+  
+#to run code and collect the output, we need to redirect it. These functions do that.  
+#from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
+@contextmanager
+def redirect_stdout(new_target):
+    old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
+    try:
+        yield new_target # run some code with the replaced stdout
+    finally:
+        sys.stdout = old_target # restore to the previous value
+        @contextmanager
+        def redirect_stderr(new_target):
+            old_target, sys.stderr = sys.stderr, new_target # replace sys.stderr
+            try:
+                yield new_target # run some code with the replaced stderr
+            finally:
+                sys.stderr = old_target # restore to the previous value
 
 
-class Member(ndb.Model):
+class Member(ndb.Model): 
+#represents one person with a name and a pymode bool telling the program if it should interpret their mesages as python code
     name = ndb.StringProperty()
     pymode = ndb.BooleanProperty()
 
 class ChatInfo(ndb.Model):
-    chat_id = ndb.StringProperty() #This will be our key
+    chat_id = ndb.StringProperty() 
+    #This will be our key for the locks because there will be one console per CHAT not one console per user
     group_chat = ndb.BooleanProperty()
     console = ndb.PickleProperty()
-    members = ndb.StructuredProperty(Member, repeated=True)
+    members = ndb.StructuredProperty(Member, repeated=True) #list of members each with their own pymode
 
 
 app = Flask(__name__)
@@ -114,11 +143,13 @@ app = Flask(__name__)
 
 @app.route('/me')
 def display_me():
+    """ Just for testing purposes"""
     urlfetch.set_default_fetch_deadline(60)
     return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'getMe')))
 
 @app.route('/setwh')
 def set_webhook():
+    """Exists to setup the webhook from the telegram api to the appengine site"""
     urlfetch.set_default_fetch_deadline(60)
     return json.dumps(json.load(urllib2.urlopen(BASE_URL + 'setWebhook', urllib.urlencode({'url': "https://pybot-1023.appspot.com/webhook"}))))
 
@@ -126,25 +157,14 @@ def set_webhook():
 
 @app.route('/webhook', methods=["PUT", "POST"])
 def wh():
-    #from https://stackoverflow.com/questions/22425453/redirect-output-from-stdin-using-code-module-in-python
-    @contextmanager
-    def redirect_stdout(new_target):
-        old_target, sys.stdout = sys.stdout, new_target # replace sys.stdout
-        try:
-            yield new_target # run some code with the replaced stdout
-        finally:
-            sys.stdout = old_target # restore to the previous value
-    @contextmanager
-    def redirect_stderr(new_target):
-        old_target, sys.stderr = sys.stderr, new_target # replace sys.stderr
-        try:
-            yield new_target # run some code with the replaced stderr
-        finally:
-            sys.stderr = old_target # restore to the previous value
-        
+    """
+    This is the function that is called when a message is sent to pybot.
+    I choose to define most of the functions that rely on content from the message within this function.
+    This results in an unacceptably long function, but I'd like to avoid thinking of this as a function and instead think of this
+    as the main text of hte program. This also allows me to think of each interaction as one indepent run of this program where most functions are really procedures being based only on the contents of wh(). Tis a compromise.
+    """
 
     urlfetch.set_default_fetch_deadline(60)
-    
     r = request.get_json()
     logging.info("raw request:")
     logging.info(r)
@@ -155,8 +175,8 @@ def wh():
     
     message = body['message']
     from_section = message.get('from')
+
     #apparently, you don't have to have all three of these...
-    
     try:
         user_name = from_section["username"]
     except:
@@ -175,12 +195,15 @@ def wh():
     fr =  user_name + last_name + first_name
     chat = message['chat']
     chat_id = str(chat['id'])
-    lock_key = chat_id + "lock"
-    lock = Lock(lock_key)
+    lock_key = chat_id + "lock" #we don't want block any other uses that we might have for the chatid
+    lock = Lock(lock_key) #lock down the communication for this chat
     message_id = message.get('message_id')
     date = message.get('date')
     
     #at this point we can define our reply function
+    #from here until we begin to process the things that might vary from message to message in each chat
+    #we will begin to define functions that depend on the chat related constant that every chat is garunteed to have
+    #but take things that might vary from message to mesage as argument
     
     def give_response(chat_id, msg):
         try:
@@ -192,10 +215,7 @@ def wh():
             })).read()
         except:
             logging.warning("http error")
-    #we can also define all the functions that need to operate atomically on the database
-
-
-
+    #from here on all these functions operate automically on the database
     
     def create_new_user():
         """
@@ -232,7 +252,7 @@ def wh():
             group_chat.key.id()
             group_chat.put()
         lock.release()
-        return
+        
     
 
 
@@ -265,7 +285,6 @@ def wh():
                 chat.put()
                 lock.release()
                 value = chat.members[index].pymode
-                
                 logging.info("toggling pymode of {} from {} to {}".format(fr,old, value))
                 return value
         lock.release()
@@ -275,6 +294,12 @@ def wh():
     #now we define the command processing function
 
     def process_command(cmd, runsource=False):
+        """
+        :param cmd - string that constitutes the cmd we want to run
+        :param runsource - bool - True if want to treat the cmd as the print out of an individaul python file
+        This function runs the given command and sends the output back to the chat. Runsource exists so that 
+        the chat can link to python files and have pybot run them.
+        """
         logging.info("starting to process command")
         f = StringIO() #fake files to redirect stdio/stderr into
         g = StringIO()
@@ -288,7 +313,7 @@ def wh():
             with redirect_stderr(g):
                 if not runsource:
                     executed = console.push(cmd) #run commands with our console 
-                    #!!! COVER EXIT - this one exception carries through!
+                    #!!! COVER EXIT - this one exception carries through and is blocked by blocking the import of os and sys
                     chat.console = dill.dumps(console) #put the console back
                     chat.put()
                     lock.release()
@@ -305,7 +330,6 @@ def wh():
             cmd_res = "\"" + f.getvalue() + g.getvalue() + "\"" #later test if both are needed.
             logging.info("cmd result:")
             logging.info(cmd_res)
-            #console.resetbuffer() #clean the buffer - I'm not sure this is needed because I do not fully understand the code buffer thing
             give_response(chat_id, cmd_res);
         else:
             logging.info("Waiting for further input")
@@ -323,24 +347,26 @@ def wh():
         """
         lock.acquire()
         chat = ChatInfo.get_by_id(chat_id)
-        temp = code.InteractiveConsole()
-        chat.console = dill.dumps(temp)
+        temp = code.InteractiveConsole() #create a new console
+        chat.console = dill.dumps(temp) # replace it
         chat.put()
         lock.release()
 
 
         
-    #things that are variable in the mssage
-    #Atext will remain none if it is a group message
-    atext = None
-    atext = message.get('text')
+    #Now we process things that might vary from message to message and react accordingly
+   
+    atext = None  
+    
+    atext = message.get('text') #If this message has an actual text message, atext will take on its value
+    # otherwise, atex stays NONE indicating that the message does not have code we want to process
+    #although it might have an operation on a group that we want to check for.
     if atext == None:
-        # it is a group message or something we don't like
-        atext = message.get(u'new_chat_participant') 
-        #These don't need to be transactional as there are specific message types for the creation and
-        #destruction of groups
-        #But we might consider adding locks....
-        if atext != None:
+        # it is a group message or something we don't like e.g. a photo
+        atext = message.get(u'new_chat_participant')  # is this a group is adding a new user so we add them to the chat?
+        #These don't need to be transactional as there are single specific message types for group creation and destruction
+       
+        if atext != None: #the message is a group adding a user 
             group_chat = ChatInfo(id = chat_id)
             group_chat.group_chat = True
             group_chat.chat_id = chat_id
@@ -353,9 +379,9 @@ def wh():
             give_response(chat_id, document)
             resp = Response(r, status=200)
             return resp
-        else:
-            atext = message.get('left_chat_participant')
-            if atext != None:
+        else: # the message is not a group adding a user
+            atext = message.get('left_chat_participant') #  are they removing a user?
+            if atext != None: #let's remove the whole thing for now to clean the console
                 del_group_chat = ChatInfo.get_by_id(chat_id)
                 try:
                     del_group_chat.key.delete()
@@ -363,9 +389,9 @@ def wh():
                     logging.warn("Tried to delete non-existent group")
                 resp = Response(r, status=200)
                 return resp
-            else:
+            else: # nope, they are sending a photo or something...
                 logging.info("Included non-text content")
-                if in_pymode():
+                if in_pymode(): #if they sent it while in python interpertaion mode, we respond.
                     give_response(chat_id, "Action not allowed, ass")
                 resp = Response(r, status=200)
                 return resp
@@ -375,28 +401,31 @@ def wh():
         #we need to find if there is a new user and create them if needed
         #since an individual user request can start in many ways, this needs to be atomic
         create_new_user()
-        #if we get past this point, we should be sure that a chat exists and the user exists
+        #if we get past this point, we can be sure that a chat exists and the user exists and they had a message
+        # now let's process the user's command
+        # and yes, this is meant to carry on if this else statement is reached
+        # the others terminate because they don't have code to respond to
     
     
-    #deal with special chars:
+    #deal with special chars in the mssage.
     btext = atext.rstrip("\\n")
     ctext = string.replace(btext, "\\t", '\t')
     text = string.replace(ctext, "\\n", '\n')
     #this is sloppy, fix it - generalize it - add more
     logging.info("text:")
-    logging.info(text)
+    logging.info(text) #log the processed code
 
     #flag to be set if we want to process text even if pymode is not enabled by the user
     override_pymode = False
     
     #commands that transform the text/command are to be processed first
     if text[0] == '/':
-        if text[0:7] == '/python':
+        if text[0:7] == '/python': #send the code to the interpreter without invoking python mode
             text = text[8:]
             override_pymode = True
         if text[0:4] == '/b ': #experimental - not to be included in docs yet
             override_pymode = True
-        elif text[0:7] == '/pylink':
+        elif text[0:7] == '/pylink': # try to set the text to code in a linked gist
             link = text[8:]
             if 'gist.github' not in link: #use regex later - simple test but might be easy to fool
                 logging.warn("someone attempted to send invalid link")
@@ -404,7 +433,7 @@ def wh():
                 resp = Response(r, status=200)
                 return resp
             
-            paste = req.get(link)
+            paste = req.get(link) # get the code
             if not paste: # test if not status 200
                 logging.warn("Possible server to pasterpin connection issue")
                 give_response(chat_id, "Invalid link or connection issue")
@@ -412,10 +441,11 @@ def wh():
                 return resp
             logging.info(paste.text)
             soup = BeautifulSoup(paste.text)
-            links = soup.find_all('a')
+            links = soup.find_all('a') 
             logging.info("soup:\n:{}".format(soup.prettify().encode('utf-8')))
             try:
-                newlink = 'https://gist.githubusercontent.com' + [x for x in links if 'Raw' in x.text][0].get('href') #finds the Raw page where the code is easy to get
+                newlink = 'https://gist.githubusercontent.com' + [x for x in links if 'Raw' in x.text][0].get('href') 
+                #finds the Raw page where the code is easy to get
                 logging.info("Newlink is: {}".format(newlink))
             except IndexError: #in case something goes wrong and no raw page is there
                 logging.warn("Error fiding raw")
@@ -428,8 +458,8 @@ def wh():
                 give_response(chat_id, "Invalid link")
                 resp = Response(r, status=200)
                 return resp
-            text = paste2.text.replace('\r','\n')
-            override_pymode = True
+            text = paste2.text.replace('\r','\n') 
+            override_pymode = True #set the text to the code in the gist and set it to be interpreted
             logging.info("py link text\n:{}".format(text.encode('utf-8')))
 
 
@@ -458,10 +488,10 @@ def wh():
         elif text == '/mypy':
             py = in_pymode()
             give_response(chat_id, "You are in pymode: {}".format(str(py)))
-        #at this point, if they are not in pymode, we should be discarding all input
+       
     else:
 
-
+        #at this point, if they are not in pymode, we should be discarding all input
         if not in_pymode() and not override_pymode:
             logging.info("Discarded input because in pymode")
             resp = Response(r, status=200) 
@@ -493,8 +523,9 @@ def wh():
                     give_response(chat_id, "Max execution time exceded")
 
         
-    resp = Response(r, status=200) #say that something happened
+    resp = Response(r, status=200) 
     return resp    
+    # ^ say that something happened - it is important to have these so telegram doesn't keep send mssages that we processed 
         
     
     
